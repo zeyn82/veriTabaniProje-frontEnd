@@ -21,42 +21,39 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
   };
 
   return (
-    <div>
-      <h2>Havalimanı Yönetimi</h2>
+    <div className="page">
+  <div className="card">
+    <h2>Havalimanı Yönetimi</h2>
 
+    <div className="form-group">
       <input
         placeholder="Havalimanı Adı"
         value={ad}
         onChange={(e) => setAd(e.target.value)}
+        className="form-group-full"
       />
 
-      <button
-        type="button"
-        onClick={ekle}
-        style={{ backgroundColor: "#22c55e", color: "white" }}
-      >
+      <button className="primary" onClick={ekle}>
         Ekle
       </button>
-
-      <ul>
-        {havalimanlari.map((h) => (
-          <li key={h.id}>
-            {h.ad}
-            <button
-              type="button"
-              onClick={() => sil(h.id)}
-              style={{
-                backgroundColor: "#ef4444",
-                color: "white",
-                marginLeft: "10px",
-              }}
-            >
-              Sil
-            </button>
-          </li>
-        ))}
-      </ul>
     </div>
+  </div>
+
+  <div className="card">
+    <h3>Havalimanları</h3>
+    <ul>
+      {havalimanlari.map(h => (
+        <li key={h.id}>
+          {h.ad}
+          <button className="danger" onClick={() => sil(h.id)}>
+            Sil
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+</div>
+
   );
 }
 

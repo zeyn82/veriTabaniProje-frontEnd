@@ -1,135 +1,102 @@
 import { useState } from "react";
 
-function Ucus({ havalimanlari = [] }) {
+function Ucus() {
   const [ucuslar, setUcuslar] = useState([]);
   const [kod, setKod] = useState("");
-  const [kalkisId, setKalkisId] = useState("");
-  const [varisId, setVarisId] = useState("");
-  const [duzenlenenId, setDuzenlenenId] = useState(null);
+  const [kalkis, setKalkis] = useState("");
+  const [varis, setVaris] = useState("");
 
-  const kaydet = () => {
-    if (!kod || !kalkisId || !varisId) return;
+  const ekle = () => {
+    if (!kod || !kalkis || !varis) return;
 
-    if (Number(kalkisId) === Number(varisId)) {
-      window.alert("Kalkış ve varış havalimanı aynı olamaz!");
+    if (kalkis === varis) {
+      alert("Kalkış ve varış aynı olamaz!");
       return;
     }
 
-    if (duzenlenenId === null) {
-      setUcuslar((onceki) => [
-        ...onceki,
-        {
-          id: Date.now(),
-          kod,
-          kalkisId,
-          varisId,
-        },
-      ]);
-    } else {
-      setUcuslar((onceki) =>
-        onceki.map((u) =>
-          u.id === duzenlenenId
-            ? { ...u, kod, kalkisId, varisId }
-            : u
-        )
-      );
-    }
+    setUcuslar([
+      ...ucuslar,
+      {
+        id: Date.now(),
+        kod,
+        kalkis,
+        varis,
+      },
+    ]);
 
     setKod("");
-    setKalkisId("");
-    setVarisId("");
-    setDuzenlenenId(null);
+    setKalkis("");
+    setVaris("");
   };
 
   const sil = (id) => {
-    setUcuslar((onceki) =>
-      onceki.filter((u) => u.id !== id)
-    );
-  };
-
-  const duzenle = (u) => {
-    setDuzenlenenId(u.id);
-    setKod(u.kod);
-    setKalkisId(u.kalkisId);
-    setVarisId(u.varisId);
-  };
-
-  const havalimanAdiBul = (id) => {
-    const h = havalimanlari.find((x) => x.id === Number(id));
-    return h ? h.ad : "";
+    if (!window.confirm("Uçuş silinsin mi?")) return;
+    setUcuslar(ucuslar.filter((u) => u.id !== id));
   };
 
   return (
-    <div>
-      <h2>Uçuş Yönetimi</h2>
+    <div className="page">
+      <div className="card">
+        <h2>Uçuş Ekle</h2>
 
-      <input
-        placeholder="Uçuş Kodu"
-        value={kod}
-        onChange={(e) => setKod(e.target.value)}
-      />
+        <input
+          placeholder="Uçuş Kodu"
+          value={kod}
+          onChange={(e) => setKod(e.target.value)}
+        />
 
-      <select
-        value={kalkisId}
-        onChange={(e) => setKalkisId(e.target.value)}
-      >
-        <option value="">Kalkış Havalimanı Seç</option>
-        {havalimanlari.map((h) => (
-          <option key={h.id} value={h.id}>
-            {h.ad}
-          </option>
-        ))}
-      </select>
+        <input
+          placeholder="Kalkış"
+          value={kalkis}
+          onChange={(e) => setKalkis(e.target.value)}
+        />
 
-      <select
-        value={varisId}
-        onChange={(e) => setVarisId(e.target.value)}
-      >
-        <option value="">Varış Havalimanı Seç</option>
-        {havalimanlari.map((h) => (
-          <option key={h.id} value={h.id}>
-            {h.ad}
-          </option>
-        ))}
-      </select>
+        <input
+          placeholder="Varış"
+          value={varis}
+          onChange={(e) => setVaris(e.target.value)}
+        />
 
-      <button
-        type="button"
-        onClick={kaydet}
-        style={{
-          backgroundColor: "#22c55e",
-          color: "white",
-          marginLeft: "10px",
-        }}
-      >
-        {duzenlenenId === null ? "Ekle" : "Güncelle"}
-      </button>
+        <button className="primary" onClick={ekle}>
+          Uçuş Ekle
+        </button>
+      </div>
 
-      <ul>
-        {ucuslar.map((u) => (
-          <li key={u.id}>
-            <strong>{u.kod}</strong> |{" "}
-            {havalimanAdiBul(u.kalkisId)} →{" "}
-            {havalimanAdiBul(u.varisId)}
-            <div>
-              <button type="button" onClick={() => duzenle(u)}>
-                Düzenle
-              </button>
-              <button
-                type="button"
-                onClick={() => sil(u.id)}
-                style={{
-                  backgroundColor: "#ef4444",
-                  color: "white",
-                  marginLeft: "5px",
-                }}
-              >
-                Sil
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="card">
+        <h3>Uçuş Listesi</h3>
+
+        {ucuslar.length === 0 ? (
+          <p>Henüz uçuş eklenmedi.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Uçuş Kodu</th>
+                <th>Kalkış</th>
+                <th>Varış</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ucuslar.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.kod}</td>
+                  <td>{u.kalkis}</td>
+                  <td>{u.varis}</td>
+                  <td>
+                    <button
+                      className="danger"
+                      onClick={() => sil(u.id)}
+                    >
+                      Sil
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

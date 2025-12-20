@@ -6,13 +6,20 @@ function Yolcu() {
   const [tcNo, setTcNo] = useState("");
   const [duzenlenenId, setDuzenlenenId] = useState(null);
 
+  // Lookup için
+  const [secilenYolcuId, setSecilenYolcuId] = useState("");
+
   const kaydet = () => {
     if (!adSoyad || !tcNo) return;
 
     if (duzenlenenId === null) {
       setYolcular((onceki) => [
         ...onceki,
-        { id: Date.now(), adSoyad, tcNo },
+        {
+          id: Date.now(),
+          adSoyad,
+          tcNo,
+        },
       ]);
     } else {
       setYolcular((onceki) =>
@@ -33,6 +40,10 @@ function Yolcu() {
     setYolcular((onceki) =>
       onceki.filter((y) => y.id !== id)
     );
+
+    if (secilenYolcuId === id) {
+      setSecilenYolcuId("");
+    }
   };
 
   const duzenle = (y) => {
@@ -42,51 +53,97 @@ function Yolcu() {
   };
 
   return (
-    <div>
-      <h2>Yolcu Yönetimi</h2>
+    <div className="page">
 
-      <input
-        placeholder="Ad Soyad"
-        value={adSoyad}
-        onChange={(e) => setAdSoyad(e.target.value)}
-      />
+      {/* Yolcu Formu */}
+      <div className="card">
+        <h2>Yolcu Yönetimi</h2>
 
-      <input
-        placeholder="TC Kimlik No"
-        value={tcNo}
-        onChange={(e) => setTcNo(e.target.value)}
-      />
+        <div className="form-group">
+          <input
+            placeholder="Ad Soyad"
+            value={adSoyad}
+            onChange={(e) => setAdSoyad(e.target.value)}
+            className="form-group-full"
+          />
 
-      <button
-        type="button"
-        onClick={kaydet}
-        style={{ backgroundColor: "#22c55e", color: "white" }}
-      >
-        {duzenlenenId === null ? "Ekle" : "Güncelle"}
-      </button>
+          <input
+            placeholder="TC Kimlik No"
+            value={tcNo}
+            onChange={(e) => setTcNo(e.target.value)}
+            className="form-group-full"
+          />
 
-      <ul>
-        {yolcular.map((y) => (
-          <li key={y.id}>
-            {y.adSoyad} - {y.tcNo}
-            <div>
-              <button type="button" onClick={() => duzenle(y)}>
-                Düzenle
-              </button>
-              <button
-                type="button"
-                onClick={() => sil(y.id)}
-                style={{ backgroundColor: "#ef4444", color: "white" }}
-              >
-                Sil
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+          <button className="primary" onClick={kaydet}>
+            {duzenlenenId === null ? "Ekle" : "Güncelle"}
+          </button>
+        </div>
+      </div>
+
+      {/* Lookup Kartı */}
+      <div className="card">
+        <h3>Yolcu Seç (Lookup)</h3>
+
+        <select
+          value={secilenYolcuId}
+          onChange={(e) => setSecilenYolcuId(e.target.value)}
+        >
+          <option value="">Yolcu Seç</option>
+          {yolcular.map((y) => (
+            <option key={y.id} value={y.id}>
+              {y.adSoyad}
+            </option>
+          ))}
+        </select>
+
+        {secilenYolcuId && (
+          <p style={{ marginTop: "10px" }}>
+            <strong>Seçilen Yolcu ID:</strong> {secilenYolcuId}
+          </p>
+        )}
+      </div>
+
+      {/* Yolcu Listesi (TABLO) */}
+      <div className="card">
+        <h3>Yolcu Listesi</h3>
+
+        {yolcular.length === 0 ? (
+          <p>Henüz yolcu eklenmedi.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Ad Soyad</th>
+                <th>TC Kimlik No</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody>
+              {yolcular.map((y) => (
+                <tr key={y.id}>
+                  <td>{y.adSoyad}</td>
+                  <td>{y.tcNo}</td>
+                  <td>
+                    <button onClick={() => duzenle(y)}>
+                      Düzenle
+                    </button>
+                    <button
+                      className="danger"
+                      onClick={() => sil(y.id)}
+                      style={{ marginLeft: "6px" }}
+                    >
+                      Sil
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
     </div>
   );
 }
 
 export default Yolcu;
-
