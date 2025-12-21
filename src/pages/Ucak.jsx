@@ -21,7 +21,7 @@ function Ucak() {
       );
       setDuzenlenenId(null);
     } else {
-      // AYNI UÇAK ID VAR MI?
+      // AYNI UÇAK ID KONTROLÜ
       const varMi = ucaklar.some((u) => u.ucakId === ucakId);
       if (varMi) {
         alert("Bu Uçak ID zaten mevcut!");
@@ -41,6 +41,7 @@ function Ucak() {
   };
 
   const sil = (id) => {
+    if (!window.confirm("Uçak silinsin mi?")) return;
     setUcaklar(ucaklar.filter((u) => u.ucakId !== id));
   };
 
@@ -52,41 +53,77 @@ function Ucak() {
   };
 
   return (
-    <div>
-      <h2>Uçak Yönetimi</h2>
+    <div className="page">
 
-      <input
-        placeholder="Uçak ID"
-        value={ucakId}
-        onChange={(e) => setUcakId(e.target.value)}
-      />
+      {/* UÇAK FORMU */}
+      <div className="card">
+        <h2>Uçak Yönetimi</h2>
 
-      <input
-        placeholder="Model"
-        value={model}
-        onChange={(e) => setModel(e.target.value)}
-      />
+        <input
+          placeholder="Uçak ID"
+          value={ucakId}
+          onChange={(e) => setUcakId(e.target.value)}
+        />
 
-      <input
-        type="number"
-        placeholder="Kapasite"
-        value={kapasite}
-        onChange={(e) => setKapasite(e.target.value)}
-      />
+        <input
+          placeholder="Model"
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+        />
 
-      <button onClick={ekle}>
-        {duzenlenenId ? "Güncelle" : "Ekle"}
-      </button>
+        <input
+          type="number"
+          placeholder="Kapasite"
+          value={kapasite}
+          onChange={(e) => setKapasite(e.target.value)}
+        />
 
-      <ul>
-        {ucaklar.map((u) => (
-          <li key={u.ucakId}>
-            ID: {u.ucakId} | Model: {u.model} | Kapasite: {u.kapasite}
-            <button onClick={() => duzenle(u)}>Düzenle</button>
-            <button onClick={() => sil(u.ucakId)}>Sil</button>
-          </li>
-        ))}
-      </ul>
+        <button className="primary" onClick={ekle}>
+          {duzenlenenId ? "Güncelle" : "Ekle"}
+        </button>
+      </div>
+
+      {/* UÇAK LİSTESİ */}
+      <div className="card">
+        <h3>Uçak Listesi</h3>
+
+        {ucaklar.length === 0 ? (
+          <p>Henüz uçak eklenmedi.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Uçak ID</th>
+                <th>Model</th>
+                <th>Kapasite</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ucaklar.map((u) => (
+                <tr key={u.ucakId}>
+                  <td>{u.ucakId}</td>
+                  <td>{u.model}</td>
+                  <td>{u.kapasite}</td>
+                  <td>
+                    <button onClick={() => duzenle(u)}>
+                      Düzenle
+                    </button>
+                    <button
+                      className="danger"
+                      onClick={() => sil(u.ucakId)}
+                      style={{ marginLeft: "6px" }}
+                    >
+                      Sil
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
     </div>
   );
 }
