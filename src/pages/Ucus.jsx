@@ -1,16 +1,16 @@
 import { useState } from "react";
 
-function Ucus() {
+function Ucus({ havalimanlari, havayollari, ucaklar }) {
   const [ucuslar, setUcuslar] = useState([]);
-  const [kod, setKod] = useState("");
-  const [kalkis, setKalkis] = useState("");
-  const [varis, setVaris] = useState("");
+
+  const [ucusKodu, setUcusKodu] = useState("");
+  const [havalimaniId, setHavalimaniId] = useState("");
+  const [havayoluId, setHavayoluId] = useState("");
+  const [ucakId, setUcakId] = useState("");
 
   const ekle = () => {
-    if (!kod || !kalkis || !varis) return;
-
-    if (kalkis === varis) {
-      alert("Kalkış ve varış aynı olamaz!");
+    if (!ucusKodu || !havalimaniId || !havayoluId || !ucakId) {
+      alert("Tüm alanlar zorunludur!");
       return;
     }
 
@@ -18,15 +18,17 @@ function Ucus() {
       ...ucuslar,
       {
         id: Date.now(),
-        kod,
-        kalkis,
-        varis,
+        ucusKodu,
+        havalimaniId: Number(havalimaniId),
+        havayoluId: Number(havayoluId),
+        ucakId,
       },
     ]);
 
-    setKod("");
-    setKalkis("");
-    setVaris("");
+    setUcusKodu("");
+    setHavalimaniId("");
+    setHavayoluId("");
+    setUcakId("");
   };
 
   const sil = (id) => {
@@ -37,25 +39,52 @@ function Ucus() {
   return (
     <div className="page">
       <div className="card">
-        <h2>Uçuş Ekle</h2>
+        <h2>Uçuş Yönetimi</h2>
 
         <input
           placeholder="Uçuş Kodu"
-          value={kod}
-          onChange={(e) => setKod(e.target.value)}
+          value={ucusKodu}
+          onChange={(e) => setUcusKodu(e.target.value)}
         />
 
-        <input
-          placeholder="Kalkış"
-          value={kalkis}
-          onChange={(e) => setKalkis(e.target.value)}
-        />
+        {/* HAVALİMANI */}
+        <select
+          value={havalimaniId}
+          onChange={(e) => setHavalimaniId(e.target.value)}
+        >
+          <option value="">Havalimanı Seç</option>
+          {havalimanlari.map((h) => (
+            <option key={h.id} value={h.id}>
+              {h.ad}
+            </option>
+          ))}
+        </select>
 
-        <input
-          placeholder="Varış"
-          value={varis}
-          onChange={(e) => setVaris(e.target.value)}
-        />
+        {/* HAVAYOLU */}
+        <select
+          value={havayoluId}
+          onChange={(e) => setHavayoluId(e.target.value)}
+        >
+          <option value="">Havayolu Seç</option>
+          {havayollari.map((h) => (
+            <option key={h.id} value={h.id}>
+              {h.ad}
+            </option>
+          ))}
+        </select>
+
+        {/* UÇAK */}
+        <select
+          value={ucakId}
+          onChange={(e) => setUcakId(e.target.value)}
+        >
+          <option value="">Uçak Seç</option>
+          {ucaklar.map((u) => (
+            <option reopened key={u.ucakId} value={u.ucakId}>
+              {u.model} ({u.ucakId})
+            </option>
+          ))}
+        </select>
 
         <button className="primary" onClick={ekle}>
           Uçuş Ekle
@@ -72,27 +101,41 @@ function Ucus() {
             <thead>
               <tr>
                 <th>Uçuş Kodu</th>
-                <th>Kalkış</th>
-                <th>Varış</th>
+                <th>Havalimanı</th>
+                <th>Havayolu</th>
+                <th>Uçak</th>
                 <th>İşlem</th>
               </tr>
             </thead>
             <tbody>
-              {ucuslar.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.kod}</td>
-                  <td>{u.kalkis}</td>
-                  <td>{u.varis}</td>
-                  <td>
-                    <button
-                      className="danger"
-                      onClick={() => sil(u.id)}
-                    >
-                      Sil
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {ucuslar.map((u) => {
+                const havalimanı = havalimanlari.find(
+                  (h) => h.id === u.havalimaniId
+                );
+                const havayolu = havayollari.find(
+                  (h) => h.id === u.havayoluId
+                );
+                const ucak = ucaklar.find(
+                  (x) => x.ucakId === u.ucakId
+                );
+
+                return (
+                  <tr key={u.id}>
+                    <td>{u.ucusKodu}</td>
+                    <td>{havalimanı?.ad}</td>
+                    <td>{havayolu?.ad}</td>
+                    <td>{ucak?.model}</td>
+                    <td>
+                      <button
+                        className="danger"
+                        onClick={() => sil(u.id)}
+                      >
+                        Sil
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

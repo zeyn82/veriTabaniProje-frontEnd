@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 function Yolcu() {
   const [yolcular, setYolcular] = useState([]);
@@ -53,8 +54,13 @@ function Yolcu() {
   };
 
   return (
-    <div className="page">
-
+    <motion.div
+      className="page"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+    >
       {/* Yolcu Formu */}
       <div className="card">
         <h2>Yolcu Yönetimi</h2>
@@ -103,7 +109,7 @@ function Yolcu() {
         )}
       </div>
 
-      {/* Yolcu Listesi (TABLO) */}
+      {/* Yolcu Listesi */}
       <div className="card">
         <h3>Yolcu Listesi</h3>
 
@@ -141,8 +147,7 @@ function Yolcu() {
           </table>
         )}
       </div>
-
-    </div>
+    </motion.div>
   );
 }
 

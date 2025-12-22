@@ -210,3 +210,354 @@ button.danger {
   border: none;
   border-radius: 6px;
 }
+
+/* ===== TEMA DEĞİŞKENLERİ ===== */
+:root {
+  --bg-color: #f4f6f8;
+  --card-bg: #ffffff;
+  --text-color: #222;
+  --primary-color: #22c55e;
+  --danger-color: #ef4444;
+  --nav-bg: #ffffff;
+}
+
+body.dark {
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --text-color: #e5e7eb;
+  --primary-color: #22c55e;
+  --danger-color: #ef4444;
+  --nav-bg: #020617;
+}
+
+/* ===== GENEL UYGULAMA ===== */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.card {
+  background-color: var(--card-bg);
+  transition: background-color 0.3s;
+}
+
+nav {
+  background-color: var(--nav-bg);
+  padding: 12px;
+}
+
+/* Buton renkleri */
+button.primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+button.danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+
+/* ===== TEMA SWITCH ===== */
+.theme-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  border-radius: 34px;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #22c55e;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* =====  NAVBAR HİZALAMA===== */
+nav a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.navbar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.nav-center {
+  display: flex;
+  gap: 14px;
+}
+
+.nav-right {
+  position: absolute;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+/* Menü linkleri */
+.nav-link {
+  color: var(--text-color);
+  text-decoration: none;
+  padding: 4px 2px;
+  font-weight: 500;
+  position: relative;
+}
+
+/* Aktif menü */
+.nav-link.active {
+  color: var(--primary-color);
+}
+
+/* Alt çizgi efekti */
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-color);
+  border-radius: 2px;
+}
+
+
+/* SOLA AÇILAN HAMBURGER MENÜ */
+.menu {
+  position: fixed;
+  top: 64px;
+  left: -260px;          /* başlangıçta ekran dışında */
+  width: 240px;
+  height: calc(100vh - 64px);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+  transition: left 0.3s ease;
+  z-index: 1000;
+}
+
+/* AÇIK HALİ */
+.menu.open {
+  left: 0;
+}
+
+/* MENÜ LİNKLERİ */
+.menu a {
+  padding: 14px 20px;
+  text-align: left;
+  text-decoration: none;
+  color: #374151;
+  font-weight: 500;
+}
+
+.menu a:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.hamburger {
+  position: absolute;
+  left: 16px;
+  font-size: 26px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+/* --- 1. RENK DEĞİŞKENLERİ (TEMALAR) --- */
+:root {
+  /* AYDINLIK (DEFAULT) MOD RENKLERİ */
+  --bg-color: #f9f9f9;
+  --text-color: #333333;
+  --nav-bg: #ffffff;
+  --nav-border: #dddddd;
+  --menu-bg: #ffffff;
+  --link-hover-bg: #eef2ff;
+  --link-hover-text: #2563eb;
+  --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* KARANLIK MOD (Body'ye 'dark' class'ı gelince bunlar aktif olur) */
+body.dark {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --nav-bg: #1e1e1e;
+  --nav-border: #333333;
+  --menu-bg: #1e1e1e;
+  --link-hover-bg: #333333;
+  --link-hover-text: #60a5fa;
+  --shadow: rgba(255, 255, 255, 0.1);
+}
+
+/* --- 2. TEMEL AYARLAR --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color); /* Değişkenden alıyor */
+  color: var(--text-color);          /* Değişkenden alıyor */
+  transition: background-color 0.3s, color 0.3s; /* Renk geçişi yumuşak olsun */
+}
+
+/* Link ve Buton Ayarları */
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; }
+
+/* --- 3. MENÜ LİNKLERİ --- */
+.menu-link {
+  display: block;
+  padding: 10px 15px;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+  font-weight: 500;
+}
+
+.menu-link:hover {
+  background-color: var(--link-hover-bg);
+  color: var(--link-hover-text);
+  transform: translateX(5px);
+}
+
+/* --- 4. TOGGLE SLIDER (AÇMA KAPAMA BUTONU) --- */
+.toggle-switch {
+  width: 50px;
+  height: 26px;
+  background-color: #ccc;
+  border-radius: 50px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
+/* Dark mod aktifken slider arka planı yeşil/mavi olsun */
+body.dark .toggle-switch {
+  background-color: #4ade80; /* Yeşilimsi */
+}
+
+.toggle-circle {
+  width: 22px;
+  height: 22px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(88, 83, 81, 0.212);
+}
+
+/* Dark mod aktifken yuvarlak sağa kaysın */
+body.dark .toggle-circle {
+  transform: translateX(24px);
+}
+
+:root {
+  --nav-bg: rgba(255, 255, 255, 0.7);
+  --nav-border: rgba(119, 138, 15, 0.1);
+  --text-color: #1f2937;   /* AÇIK MOD YAZI */
+  --title-color: #e3e9eb; /* BAŞLIK RENGİ */
+  --menu-bg: #e7dede;
+  --shadow: rgba(97, 94, 94, 0.15);
+}
+
+body.dark {
+  --nav-bg: rgba(141, 137, 137, 0.85);
+  --nav-border: rgba(252, 249, 249, 0.384);
+  --text-color: #ffffff;   /* KOYU MOD YAZI */
+  --title-color: #dae1e4; /* KOYU MOD BAŞLIK */
+  --menu-bg: #59595e;
+  --shadow: rgba(255, 0, 0, 0.6);
+}
+
+.navbar-title {
+  color: var(--title-color);
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+/* Anasayfa Arka Plan */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.home-page {
+  min-height: 75vh;      /* ekranın tamamı */
+  width: 100%;
+  background-image: url("/images/havalimani.png");
+  background-size: cover;        /* 👈 EN KRİTİK SATIR */
+  background-position: center;   /* ortala */
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.home-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 0;
+}
+
+.home-card {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+}
+
+body.dark .home-card {
+  background: rgba(76, 173, 149, 0.85);
+  color: #f9fafb;
+}
+

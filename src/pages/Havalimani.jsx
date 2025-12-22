@@ -1,59 +1,97 @@
 import { useState } from "react";
 
 function Havalimani({ havalimanlari, setHavalimanlari }) {
-  const [ad, setAd] = useState("");
+  const [havalimaniId, setHavalimaniId] = useState("");
+  const [havalimaniAdi, setHavalimaniAdi] = useState("");
+  const [sehir, setSehir] = useState("");
 
   const ekle = () => {
-    if (!ad) return;
+    if (!havalimaniId || !havalimaniAdi || !sehir) return;
 
-    setHavalimanlari((onceki) => [
-      ...onceki,
-      { id: Date.now(), ad },
+    // Aynı ID tekrar eklenmesin
+    if (havalimanlari.find(h => h.id === Number(havalimaniId))) {
+      alert("Bu Havalimanı ID zaten mevcut.");
+      return;
+    }
+
+    setHavalimanlari([
+      ...havalimanlari,
+      {
+        id: Number(havalimaniId),
+        ad: havalimaniAdi,
+        sehir: sehir,
+      },
     ]);
 
-    setAd("");
+    setHavalimaniId("");
+    setHavalimaniAdi("");
+    setSehir("");
   };
 
   const sil = (id) => {
-    setHavalimanlari((onceki) =>
-      onceki.filter((h) => h.id !== id)
-    );
+    setHavalimanlari(havalimanlari.filter(h => h.id !== id));
   };
 
   return (
     <div className="page">
-  <div className="card">
-    <h2>Havalimanı Yönetimi</h2>
+      <div className="card">
+        <h2>Havalimanı Yönetimi</h2>
 
-    <div className="form-group">
-      <input
-        placeholder="Havalimanı Adı"
-        value={ad}
-        onChange={(e) => setAd(e.target.value)}
-        className="form-group-full"
-      />
+        <input
+          type="number"
+          placeholder="Havalimanı ID"
+          value={havalimaniId}
+          onChange={(e) => setHavalimaniId(e.target.value)}
+        />
 
-      <button className="primary" onClick={ekle}>
-        Ekle
-      </button>
+        <input
+          placeholder="Havalimanı Adı"
+          value={havalimaniAdi}
+          onChange={(e) => setHavalimaniAdi(e.target.value)}
+        />
+
+        <input
+          placeholder="Şehir"
+          value={sehir}
+          onChange={(e) => setSehir(e.target.value)}
+        />
+
+        <button onClick={ekle}>Ekle</button>
+      </div>
+
+      <div className="card">
+        <h3>Havalimanı Listesi</h3>
+
+        {havalimanlari.length === 0 ? (
+          <p>Kayıtlı havalimanı yok.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Havalimanı</th>
+                <th>Şehir</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {havalimanlari.map((h) => (
+                <tr key={h.id}>
+                  <td>{h.id}</td>
+                  <td>{h.ad}</td>
+                  <td>{h.sehir}</td>
+                  <td>
+                    <button className="danger" onClick={() => sil(h.id)}>
+                      Sil
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
-  </div>
-
-  <div className="card">
-    <h3>Havalimanları</h3>
-    <ul>
-      {havalimanlari.map(h => (
-        <li key={h.id}>
-          {h.ad}
-          <button className="danger" onClick={() => sil(h.id)}>
-            Sil
-          </button>
-        </li>
-      ))}
-    </ul>
-  </div>
-</div>
-
   );
 }
 

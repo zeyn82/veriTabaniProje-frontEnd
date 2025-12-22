@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 function Ucak() {
   const [ucaklar, setUcaklar] = useState([]);
@@ -11,7 +12,6 @@ function Ucak() {
     if (!ucakId || !model || !kapasite) return;
 
     if (duzenlenenId !== null) {
-      // GÜNCELLE
       setUcaklar(
         ucaklar.map((u) =>
           u.ucakId === duzenlenenId
@@ -21,18 +21,13 @@ function Ucak() {
       );
       setDuzenlenenId(null);
     } else {
-      // AYNI UÇAK ID KONTROLÜ
       const varMi = ucaklar.some((u) => u.ucakId === ucakId);
       if (varMi) {
         alert("Bu Uçak ID zaten mevcut!");
         return;
       }
 
-      // EKLE
-      setUcaklar([
-        ...ucaklar,
-        { ucakId, model, kapasite },
-      ]);
+      setUcaklar([...ucaklar, { ucakId, model, kapasite }]);
     }
 
     setUcakId("");
@@ -45,17 +40,21 @@ function Ucak() {
     setUcaklar(ucaklar.filter((u) => u.ucakId !== id));
   };
 
-  const duzenle = (ucak) => {
-    setUcakId(ucak.ucakId);
-    setModel(ucak.model);
-    setKapasite(ucak.kapasite);
-    setDuzenlenenId(ucak.ucakId);
+  const duzenle = (u) => {
+    setUcakId(u.ucakId);
+    setModel(u.model);
+    setKapasite(u.kapasite);
+    setDuzenlenenId(u.ucakId);
   };
 
   return (
-    <div className="page">
-
-      {/* UÇAK FORMU */}
+    <motion.div
+      className="page"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="card">
         <h2>Uçak Yönetimi</h2>
 
@@ -83,7 +82,6 @@ function Ucak() {
         </button>
       </div>
 
-      {/* UÇAK LİSTESİ */}
       <div className="card">
         <h3>Uçak Listesi</h3>
 
@@ -106,9 +104,7 @@ function Ucak() {
                   <td>{u.model}</td>
                   <td>{u.kapasite}</td>
                   <td>
-                    <button onClick={() => duzenle(u)}>
-                      Düzenle
-                    </button>
+                    <button onClick={() => duzenle(u)}>Düzenle</button>
                     <button
                       className="danger"
                       onClick={() => sil(u.ucakId)}
@@ -123,8 +119,7 @@ function Ucak() {
           </table>
         )}
       </div>
-
-    </div>
+    </motion.div>
   );
 }
 
