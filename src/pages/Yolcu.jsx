@@ -1,45 +1,46 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 
-function Yolcu() {
-  const [yolcular, setYolcular] = useState([]);
-  const [adSoyad, setAdSoyad] = useState("");
-  const [tcNo, setTcNo] = useState("");
-  const [duzenlenenId, setDuzenlenenId] = useState(null);
+function Yolcu({ yolcular, setYolcular }) {
+  const [yolcuAdi, setYolcuAdi] = useState("");
+  const [yolcuSoyadi, setYolcuSoyadi] = useState("");
+  const [telefonNo, setTelefonNo] = useState("");
 
-  // Lookup için
+  const [duzenlenenId, setDuzenlenenId] = useState(null);
   const [secilenYolcuId, setSecilenYolcuId] = useState("");
 
   const kaydet = () => {
-    if (!adSoyad || !tcNo) return;
+    if (!yolcuAdi || !yolcuSoyadi || !telefonNo) return;
 
     if (duzenlenenId === null) {
       setYolcular((onceki) => [
         ...onceki,
         {
-          id: Date.now(),
-          adSoyad,
-          tcNo,
+          yolcuId: Date.now(), // ✅ PRIMARY KEY
+          yolcuAdi,
+          yolcuSoyadi,
+          telefonNo,
         },
       ]);
     } else {
       setYolcular((onceki) =>
         onceki.map((y) =>
-          y.id === duzenlenenId
-            ? { ...y, adSoyad, tcNo }
+          y.yolcuId === duzenlenenId
+            ? { ...y, yolcuAdi, yolcuSoyadi, telefonNo }
             : y
         )
       );
     }
 
-    setAdSoyad("");
-    setTcNo("");
+    setYolcuAdi("");
+    setYolcuSoyadi("");
+    setTelefonNo("");
     setDuzenlenenId(null);
   };
 
   const sil = (id) => {
     setYolcular((onceki) =>
-      onceki.filter((y) => y.id !== id)
+      onceki.filter((y) => y.yolcuId !== id)
     );
 
     if (secilenYolcuId === id) {
@@ -48,9 +49,10 @@ function Yolcu() {
   };
 
   const duzenle = (y) => {
-    setDuzenlenenId(y.id);
-    setAdSoyad(y.adSoyad);
-    setTcNo(y.tcNo);
+    setDuzenlenenId(y.yolcuId);
+    setYolcuAdi(y.yolcuAdi);
+    setYolcuSoyadi(y.yolcuSoyadi);
+    setTelefonNo(y.telefonNo);
   };
 
   return (
@@ -61,22 +63,29 @@ function Yolcu() {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Yolcu Formu */}
+      {/* 🧍‍♂️ YOLCU FORMU */}
       <div className="card">
         <h2>Yolcu Yönetimi</h2>
 
         <div className="form-group">
           <input
-            placeholder="Ad Soyad"
-            value={adSoyad}
-            onChange={(e) => setAdSoyad(e.target.value)}
+            placeholder="Yolcu Adı"
+            value={yolcuAdi}
+            onChange={(e) => setYolcuAdi(e.target.value)}
             className="form-group-full"
           />
 
           <input
-            placeholder="TC Kimlik No"
-            value={tcNo}
-            onChange={(e) => setTcNo(e.target.value)}
+            placeholder="Yolcu Soyadı"
+            value={yolcuSoyadi}
+            onChange={(e) => setYolcuSoyadi(e.target.value)}
+            className="form-group-full"
+          />
+
+          <input
+            placeholder="Telefon No"
+            value={telefonNo}
+            onChange={(e) => setTelefonNo(e.target.value)}
             className="form-group-full"
           />
 
@@ -86,18 +95,18 @@ function Yolcu() {
         </div>
       </div>
 
-      {/* Lookup Kartı */}
+      {/* 🔍 LOOKUP */}
       <div className="card">
         <h3>Yolcu Seç (Lookup)</h3>
 
         <select
           value={secilenYolcuId}
-          onChange={(e) => setSecilenYolcuId(e.target.value)}
+          onChange={(e) => setSecilenYolcuId(Number(e.target.value))}
         >
           <option value="">Yolcu Seç</option>
           {yolcular.map((y) => (
-            <option key={y.id} value={y.id}>
-              {y.adSoyad}
+            <option key={y.yolcuId} value={y.yolcuId}>
+              {y.yolcuAdi} {y.yolcuSoyadi}
             </option>
           ))}
         </select>
@@ -109,7 +118,7 @@ function Yolcu() {
         )}
       </div>
 
-      {/* Yolcu Listesi */}
+      {/* 📋 YOLCU LİSTESİ */}
       <div className="card">
         <h3>Yolcu Listesi</h3>
 
@@ -119,23 +128,27 @@ function Yolcu() {
           <table>
             <thead>
               <tr>
-                <th>Ad Soyad</th>
-                <th>TC Kimlik No</th>
+                <th>ID</th>
+                <th>Ad</th>
+                <th>Soyad</th>
+                <th>Telefon</th>
                 <th>İşlemler</th>
               </tr>
             </thead>
             <tbody>
               {yolcular.map((y) => (
-                <tr key={y.id}>
-                  <td>{y.adSoyad}</td>
-                  <td>{y.tcNo}</td>
+                <tr key={y.yolcuId}>
+                  <td>{y.yolcuId}</td>
+                  <td>{y.yolcuAdi}</td>
+                  <td>{y.yolcuSoyadi}</td>
+                  <td>{y.telefonNo}</td>
                   <td>
                     <button onClick={() => duzenle(y)}>
                       Düzenle
                     </button>
                     <button
                       className="danger"
-                      onClick={() => sil(y.id)}
+                      onClick={() => sil(y.yolcuId)}
                       style={{ marginLeft: "6px" }}
                     >
                       Sil

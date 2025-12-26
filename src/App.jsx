@@ -16,6 +16,8 @@ import Ucak from "./pages/Ucak";
 import Personel from "./pages/Personel";
 import Pilot from "./pages/Pilot";
 import Kabin from "./pages/Kabin";
+import Bagaj from "./pages/Bagaj";
+import Bilet from "./pages/Bilet"; // ✅ EKLENDİ
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -29,6 +31,8 @@ function SayfaBasligi() {
     "/havayolu": "Havayolu",
     "/ucus": "Uçuş",
     "/yolcu": "Yolcu",
+    "/bilet": "Bilet",
+    "/bagaj": "Bagaj",
     "/ucak": "Uçak",
     "/personel": "Personel",
     "/pilot": "Pilot",
@@ -64,22 +68,25 @@ function App() {
   }, [dark]);
 
   /* 🏢 HAVALİMANI */
-  const [havalimanlari, setHavalimanlari] = useState([
-    { id: 1, ad: "İstanbul Havalimanı" },
-    { id: 2, ad: "Ankara Esenboğa" },
-  ]);
+  const [havalimanlari, setHavalimanlari] = useState([]);
 
   /* ✈️ HAVAYOLU */
-  const [havayollari, setHavayollari] = useState([
-    { id: 1, ad: "Türk Hava Yolları" },
-    { id: 2, ad: "Pegasus" },
-  ]);
+  const [havayollari, setHavayollari] = useState([]);
 
-  /* 🛩️ UÇAK (UÇUŞ İÇİN ZORUNLU) */
-  const [ucaklar, setUcaklar] = useState([
-    { ucakId: "TK-101", model: "Boeing 737", kapasite: 180 },
-    { ucakId: "PG-202", model: "Airbus A320", kapasite: 160 },
-  ]);
+  /* 🛩️ UÇAK */
+  const [ucaklar, setUcaklar] = useState([]);
+
+  /* 🧍‍♂️ YOLCU */
+  const [yolcular, setYolcular] = useState([]);
+
+  /* 🎟️ BİLET (YOLCUYA VAROLMA BAĞIMLI) */
+  const [biletler, setBiletler] = useState([]);
+
+  /* ✈️ UÇUŞ (BİLETE VAROLMA BAĞIMLI) */
+  const [ucuslar, setUcuslar] = useState([]);
+
+  /* 🎒 BAGAJ (ZAYIF VARLIK → YOLCU) */
+  const [bagajlar, setBagajlar] = useState([]);
 
   /* 👤 PERSONEL */
   const [personeller, setPersoneller] = useState([]);
@@ -89,8 +96,10 @@ function App() {
     { path: "/", label: "Ana Sayfa" },
     { path: "/havalimani", label: "Havalimanı" },
     { path: "/havayolu", label: "Havayolu" },
-    { path: "/ucus", label: "Uçuş" },
     { path: "/yolcu", label: "Yolcu" },
+    { path: "/bilet", label: "Bilet" }, // ✅
+    { path: "/ucus", label: "Uçuş" },
+    { path: "/bagaj", label: "Bagaj" },
     { path: "/ucak", label: "Uçak" },
     { path: "/personel", label: "Personel" },
     { path: "/pilot", label: "Pilot" },
@@ -166,7 +175,6 @@ function App() {
                 height: "100%",
                 backgroundColor: "var(--menu-bg)",
                 color: "var(--text-color)",
-                boxShadow: "2px 0 10px var(--shadow)",
                 zIndex: 100,
                 padding: "20px",
                 display: "flex",
@@ -181,7 +189,6 @@ function App() {
                   border: "none",
                   fontSize: "1.5rem",
                   color: "var(--text-color)",
-                  marginBottom: "20px",
                 }}
               >
                 ✕
@@ -191,12 +198,8 @@ function App() {
                 <Link
                   key={link.path}
                   to={link.path}
+                  onClick={() => setMenuAcik(false)}
                   className="menu-link"
-                  style={{
-                    fontSize: "1.1rem",
-                    color: "var(--text-color)",
-                    marginBottom: "10px",
-                  }}
                 >
                   {link.label}
                 </Link>
@@ -211,27 +214,15 @@ function App() {
         <Routes>
           <Route path="/" element={<AnaSayfa />} />
 
-          <Route
-            path="/havalimani"
-            element={
-              <Havalimani
-                havalimanlari={havalimanlari}
-                setHavalimanlari={setHavalimanlari}
-              />
-            }
-          />
+          <Route path="/havalimani" element={<Havalimani havalimanlari={havalimanlari} setHavalimanlari={setHavalimanlari} />} />
+          <Route path="/havayolu" element={<Havayolu havayollari={havayollari} setHavayollari={setHavayollari} />} />
+          <Route path="/yolcu" element={<Yolcu yolcular={yolcular} setYolcular={setYolcular} />} />
 
           <Route
-            path="/havayolu"
-            element={
-              <Havayolu
-                havayollari={havayollari}
-                setHavayollari={setHavayollari}
-              />
-            }
+            path="/bilet"
+            element={<Bilet yolcular={yolcular} biletler={biletler} setBiletler={setBiletler} />}
           />
 
-          {/* ✅ DÜZELTİLEN UÇUŞ ROUTE */}
           <Route
             path="/ucus"
             element={
@@ -239,23 +230,16 @@ function App() {
                 havalimanlari={havalimanlari}
                 havayollari={havayollari}
                 ucaklar={ucaklar}
+                biletler={biletler}     // 🔑 FK
+                ucuslar={ucuslar}
+                setUcuslar={setUcuslar}
               />
             }
           />
 
-          <Route path="/yolcu" element={<Yolcu />} />
+          <Route path="/bagaj" element={<Bagaj yolcular={yolcular} bagajlar={bagajlar} setBagajlar={setBagajlar} />} />
           <Route path="/ucak" element={<Ucak />} />
-
-          <Route
-            path="/personel"
-            element={
-              <Personel
-                personeller={personeller}
-                setPersoneller={setPersoneller}
-              />
-            }
-          />
-
+          <Route path="/personel" element={<Personel personeller={personeller} setPersoneller={setPersoneller} />} />
           <Route path="/pilot" element={<Pilot personeller={personeller} />} />
           <Route path="/kabin" element={<Kabin personeller={personeller} />} />
         </Routes>
