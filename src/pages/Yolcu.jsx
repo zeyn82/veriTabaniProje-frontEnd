@@ -21,7 +21,7 @@ function Yolcu({ yolcular, setYolcular }) {
       return;
     }
 
-    // ⚠️ AYNI AD + SOYAD UYARISI (UNIQUE DEĞİL, AKADEMİK UYARI)
+    // ⚠️ AYNI AD + SOYAD UYARISI
     const ayniIsimVarMi = yolcular.some(
       (y) =>
         y.yolcuAdi.toLowerCase() === yolcuAdi.toLowerCase() &&
@@ -40,18 +40,16 @@ function Yolcu({ yolcular, setYolcular }) {
     }
 
     if (duzenlenenId === null) {
-      // ➕ EKLE
       setYolcular((onceki) => [
         ...onceki,
         {
-          yolcuId: Date.now(), // ✅ PRIMARY KEY
+          yolcuId: Date.now(),
           yolcuAdi,
           yolcuSoyadi,
           telefonNo,
         },
       ]);
     } else {
-      // ✏️ GÜNCELLE
       setYolcular((onceki) =>
         onceki.map((y) =>
           y.yolcuId === duzenlenenId
@@ -61,7 +59,6 @@ function Yolcu({ yolcular, setYolcular }) {
       );
     }
 
-    // FORM TEMİZLE
     setYolcuAdi("");
     setYolcuSoyadi("");
     setTelefonNo("");
@@ -115,9 +112,14 @@ function Yolcu({ yolcular, setYolcular }) {
           />
 
           <input
+            type="tel"
             placeholder="Telefon No (10-11 hane)"
             value={telefonNo}
-            onChange={(e) => setTelefonNo(e.target.value)}
+            onChange={(e) =>
+              setTelefonNo(
+                e.target.value.replace(/[^0-9]/g, "")
+              )
+            }
             className="form-group-full"
           />
 
