@@ -11,23 +11,46 @@ function Ucak() {
   const ekle = () => {
     if (!ucakId || !model || !kapasite) return;
 
+    const id = Number(ucakId);
+    const kap = Number(kapasite);
+
+    if (id <= 0) {
+      alert("Uçak ID pozitif bir sayı olmalıdır.");
+      return;
+    }
+
+    // ❌ Negatif veya 0 kapasite engeli
+    if (kap <= 0) {
+      alert("Kapasite negatif veya 0 olamaz.");
+      return;
+    }
+
+    // ❌ Gerçekçi olmayan kapasite engeli
+    if (kap > 850) {
+      alert("Gerçekçi olmayan kapasite.");
+      return;
+    }
+
     if (duzenlenenId !== null) {
       setUcaklar(
         ucaklar.map((u) =>
           u.ucakId === duzenlenenId
-            ? { ucakId, model, kapasite }
+            ? { ...u, model, kapasite: kap }
             : u
         )
       );
       setDuzenlenenId(null);
     } else {
-      const varMi = ucaklar.some((u) => u.ucakId === ucakId);
+      const varMi = ucaklar.some((u) => u.ucakId === id);
       if (varMi) {
         alert("Bu Uçak ID zaten mevcut!");
         return;
       }
 
-      setUcaklar([...ucaklar, { ucakId, model, kapasite }]);
+      setUcaklar([
+        ...ucaklar,
+        { ucakId: id, model, kapasite: kap },
+      ]);
     }
 
     setUcakId("");
@@ -52,16 +75,17 @@ function Ucak() {
       className="page"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
     >
       <div className="card">
         <h2>Uçak Yönetimi</h2>
 
         <input
+          type="number"
           placeholder="Uçak ID"
           value={ucakId}
           onChange={(e) => setUcakId(e.target.value)}
+          disabled={duzenlenenId !== null}
         />
 
         <input

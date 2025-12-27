@@ -12,6 +12,18 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
   const kaydet = () => {
     if (!bagajNo || !agirlik || !secilenYolcuId) return;
 
+    // 🔴 AYNI YOLCUYA AYNI BAGAJ NO KONTROLÜ (COMPOSITE KEY)
+    const ayniBagajVarMi = bagajlar.some(
+      (b) =>
+        b.bagajNo === bagajNo &&
+        b.yolcuId === secilenYolcuId
+    );
+
+    if (ayniBagajVarMi && duzenlenenBagaj === null) {
+      alert("Bu yolcuya ait aynı bagaj numarası zaten var!");
+      return;
+    }
+
     if (duzenlenenBagaj === null) {
       // 🔹 ZAYIF VARLIK EKLEME
       setBagajlar((onceki) => [
@@ -19,7 +31,7 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
         {
           bagajNo,                 // kısmi anahtar
           agirlik,
-          yolcuId: secilenYolcuId, // FK (sahip varlık)
+          yolcuId: secilenYolcuId, // sahip varlık (FK)
         },
       ]);
     } else {

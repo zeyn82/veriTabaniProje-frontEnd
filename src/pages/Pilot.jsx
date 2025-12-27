@@ -1,57 +1,34 @@
-import { useState } from "react";
-
 function Pilot({ personeller }) {
-  const [pilotlar, setPilotlar] = useState([]);
-  const [seciliPersonelId, setSeciliPersonelId] = useState("");
-
-  const pilotEkle = () => {
-    if (!seciliPersonelId) return;
-
-    // Aynı personel tekrar pilot olamasın
-    if (pilotlar.find(p => p.personelId === Number(seciliPersonelId))) {
-      alert("Bu personel zaten pilot olarak eklenmiş.");
-      return;
-    }
-
-    setPilotlar([
-      ...pilotlar,
-      { personelId: Number(seciliPersonelId) }
-    ]);
-
-    setSeciliPersonelId("");
-  };
-
-  const personelBul = (id) =>
-    personeller.find(p => p.id === id);
+  const pilotlar = personeller.filter(p => p.rol === "Pilot");
 
   return (
-    <div>
-      <h2>Pilotlar</h2>
+    <div className="page">
+      <div className="card">
+        <h2>Pilot Listesi</h2>
 
-      <select
-        value={seciliPersonelId}
-        onChange={(e) => setSeciliPersonelId(e.target.value)}
-      >
-        <option value="">Personel Seç</option>
-        {personeller.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.ad} {p.soyad}
-          </option>
-        ))}
-      </select>
-
-      <button onClick={pilotEkle}>Pilot Ata</button>
-
-      <ul>
-        {pilotlar.map((pilot, index) => {
-          const personel = personelBul(pilot.personelId);
-          return (
-            <li key={index}>
-              {personel?.ad} {personel?.soyad}
-            </li>
-          );
-        })}
-      </ul>
+        {pilotlar.length === 0 ? (
+          <p>Henüz pilot atanmadı.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Personel ID</th>
+                <th>Ad</th>
+                <th>Soyad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pilotlar.map((p) => (
+                <tr key={p.personelId}>
+                  <td>{p.personelId}</td>
+                  <td>{p.ad}</td>
+                  <td>{p.soyad}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ import Personel from "./pages/Personel";
 import Pilot from "./pages/Pilot";
 import Kabin from "./pages/Kabin";
 import Bagaj from "./pages/Bagaj";
-import Bilet from "./pages/Bilet"; // ✅ EKLENDİ
+import Bilet from "./pages/Bilet";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -67,28 +67,14 @@ function App() {
     else document.body.classList.remove("dark");
   }, [dark]);
 
-  /* 🏢 HAVALİMANI */
+  /* STATE’LER */
   const [havalimanlari, setHavalimanlari] = useState([]);
-
-  /* ✈️ HAVAYOLU */
   const [havayollari, setHavayollari] = useState([]);
-
-  /* 🛩️ UÇAK */
   const [ucaklar, setUcaklar] = useState([]);
-
-  /* 🧍‍♂️ YOLCU */
   const [yolcular, setYolcular] = useState([]);
-
-  /* 🎟️ BİLET (YOLCUYA VAROLMA BAĞIMLI) */
   const [biletler, setBiletler] = useState([]);
-
-  /* ✈️ UÇUŞ (BİLETE VAROLMA BAĞIMLI) */
-  const [ucuslar, setUcuslar] = useState([]);
-
-  /* 🎒 BAGAJ (ZAYIF VARLIK → YOLCU) */
+  const [ucuslar, setUcuslar] = useState([]);   // 🔑 BİLET İÇİN GEREKLİ
   const [bagajlar, setBagajlar] = useState([]);
-
-  /* 👤 PERSONEL */
   const [personeller, setPersoneller] = useState([]);
 
   /* 🔗 MENÜ */
@@ -97,7 +83,7 @@ function App() {
     { path: "/havalimani", label: "Havalimanı" },
     { path: "/havayolu", label: "Havayolu" },
     { path: "/yolcu", label: "Yolcu" },
-    { path: "/bilet", label: "Bilet" }, // ✅
+    { path: "/bilet", label: "Bilet" },
     { path: "/ucus", label: "Uçuş" },
     { path: "/bagaj", label: "Bagaj" },
     { path: "/ucak", label: "Uçak" },
@@ -139,13 +125,12 @@ function App() {
         <div
           className="toggle-switch"
           onClick={() => setDark(!dark)}
-          title="Karanlık Modu Değiştir"
         >
           <div className="toggle-circle" />
         </div>
       </nav>
 
-      {/* 🔹 HAMBURGER MENÜ */}
+      {/* 🔹 MENÜ */}
       <AnimatePresence>
         {menuAcik && (
           <>
@@ -174,7 +159,6 @@ function App() {
                 width: "250px",
                 height: "100%",
                 backgroundColor: "var(--menu-bg)",
-                color: "var(--text-color)",
                 zIndex: 100,
                 padding: "20px",
                 display: "flex",
@@ -188,7 +172,6 @@ function App() {
                   background: "none",
                   border: "none",
                   fontSize: "1.5rem",
-                  color: "var(--text-color)",
                 }}
               >
                 ✕
@@ -218,9 +201,17 @@ function App() {
           <Route path="/havayolu" element={<Havayolu havayollari={havayollari} setHavayollari={setHavayollari} />} />
           <Route path="/yolcu" element={<Yolcu yolcular={yolcular} setYolcular={setYolcular} />} />
 
+          {/* 🔥 BİLET → UÇUŞ BAĞLANTISI TAM */}
           <Route
             path="/bilet"
-            element={<Bilet yolcular={yolcular} biletler={biletler} setBiletler={setBiletler} />}
+            element={
+              <Bilet
+                yolcular={yolcular}
+                ucuslar={ucuslar}        // ✅ KRİTİK DÜZELTME
+                biletler={biletler}
+                setBiletler={setBiletler}
+              />
+            }
           />
 
           <Route
@@ -230,7 +221,7 @@ function App() {
                 havalimanlari={havalimanlari}
                 havayollari={havayollari}
                 ucaklar={ucaklar}
-                biletler={biletler}     // 🔑 FK
+                biletler={biletler}
                 ucuslar={ucuslar}
                 setUcuslar={setUcuslar}
               />

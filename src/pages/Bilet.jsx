@@ -1,30 +1,55 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 
-function Bilet({ yolcular, biletler, setBiletler }) {
+function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
   const [biletNo, setBiletNo] = useState("");
   const [koltukNo, setKoltukNo] = useState("");
   const [secilenYolcuId, setSecilenYolcuId] = useState("");
+  const [secilenUcusId, setSecilenUcusId] = useState("");
 
   const [duzenlenenBiletNo, setDuzenlenenBiletNo] = useState(null);
 
   const kaydet = () => {
-    if (!biletNo || !koltukNo || !secilenYolcuId) return;
+    if (
+      !biletNo ||
+      !koltukNo ||
+      !secilenYolcuId ||
+      !secilenUcusId
+    )
+      return;
+
+    // 🔴 PRIMARY KEY KONTROLÜ (BiletNo)
+    const ayniBiletVarMi = biletler.some(
+      (b) => b.biletNo === biletNo
+    );
+
+    if (ayniBiletVarMi && duzenlenenBiletNo === null) {
+      alert("Bu bilet numarası zaten mevcut!");
+      return;
+    }
 
     if (duzenlenenBiletNo === null) {
+      // ➕ EKLEME
       setBiletler((onceki) => [
         ...onceki,
         {
-          biletNo,                 // ✅ PK
+          biletNo,                 // PK
           koltukNo,
-          yolcuId: secilenYolcuId, // ✅ FK
+          yolcuId: secilenYolcuId, // FK
+          ucusId: secilenUcusId,   // FK
         },
       ]);
     } else {
+      // ✏️ GÜNCELLEME
       setBiletler((onceki) =>
         onceki.map((b) =>
           b.biletNo === duzenlenenBiletNo
-            ? { ...b, koltukNo, yolcuId: secilenYolcuId }
+            ? {
+                ...b,
+                koltukNo,
+                yolcuId: secilenYolcuId,
+                ucusId: secilenUcusId,
+              }
             : b
         )
       );
@@ -33,6 +58,7 @@ function Bilet({ yolcular, biletler, setBiletler }) {
     setBiletNo("");
     setKoltukNo("");
     setSecilenYolcuId("");
+    setSecilenUcusId("");
     setDuzenlenenBiletNo(null);
   };
 
@@ -47,6 +73,7 @@ function Bilet({ yolcular, biletler, setBiletler }) {
     setBiletNo(b.biletNo);
     setKoltukNo(b.koltukNo);
     setSecilenYolcuId(b.yolcuId);
+    setSecilenUcusId(b.ucusId);
   };
 
   return (
@@ -76,9 +103,28 @@ function Bilet({ yolcular, biletler, setBiletler }) {
             className="form-group-full"
           />
 
+          {/* ✈️ UÇUŞ SEÇİMİ */}
+          <select
+            value={secilenUcusId}
+            onChange={(e) =>
+              setSecilenUcusId(Number(e.target.value))
+            }
+            className="form-group-full"
+          >
+            <option value="">Uçuş Seç</option>
+            {ucuslar.map((u) => (
+              <option key={u.ucusId} value={u.ucusId}>
+                {u.kalkis} → {u.varis}
+              </option>
+            ))}
+          </select>
+
+          {/* 👤 YOLCU SEÇİMİ */}
           <select
             value={secilenYolcuId}
-            onChange={(e) => setSecilenYolcuId(Number(e.target.value))}
+            onChange={(e) =>
+              setSecilenYolcuId(Number(e.target.value))
+            }
             className="form-group-full"
           >
             <option value="">Yolcu Seç</option>
@@ -107,6 +153,7 @@ function Bilet({ yolcular, biletler, setBiletler }) {
               <tr>
                 <th>Bilet No</th>
                 <th>Koltuk No</th>
+                <th>Uçuş</th>
                 <th>Yolcu</th>
                 <th>İşlemler</th>
               </tr>
@@ -116,11 +163,19 @@ function Bilet({ yolcular, biletler, setBiletler }) {
                 const yolcu = yolcular.find(
                   (y) => y.yolcuId === b.yolcuId
                 );
+                const ucus = ucuslar.find(
+                  (u) => u.ucusId === b.ucusId
+                );
 
                 return (
                   <tr key={b.biletNo}>
                     <td>{b.biletNo}</td>
                     <td>{b.koltukNo}</td>
+                    <td>
+                      {ucus
+                        ? `${ucus.kalkis} → ${ucus.varis}`
+                        : "—"}
+                    </td>
                     <td>
                       {yolcu
                         ? `${yolcu.yolcuAdi} ${yolcu.yolcuSoyadi}`

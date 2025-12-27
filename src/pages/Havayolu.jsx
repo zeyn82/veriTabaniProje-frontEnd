@@ -5,10 +5,16 @@ function Havayolu({ havayollari, setHavayollari }) {
   const [havayoluAdi, setHavayoluAdi] = useState("");
 
   const ekle = () => {
-    if (!havayoluId || !havayoluAdi) return;
+    const id = Number(havayoluId);
+    const ad = havayoluAdi.trim();
 
-    // Aynı ID tekrar eklenmesin
-    if (havayollari.find(h => h.id === Number(havayoluId))) {
+    if (!id || id <= 0 || !ad) {
+      alert("Lütfen geçerli bir Havayolu ID ve adı giriniz.");
+      return;
+    }
+
+    // Aynı ID engeli (PRIMARY KEY)
+    if (havayollari.some(h => h.id === id)) {
       alert("Bu Havayolu ID zaten mevcut.");
       return;
     }
@@ -16,8 +22,8 @@ function Havayolu({ havayollari, setHavayollari }) {
     setHavayollari([
       ...havayollari,
       {
-        id: Number(havayoluId),
-        ad: havayoluAdi,
+        id,
+        ad: ad.toUpperCase(), // tutarlılık
       },
     ]);
 
@@ -26,6 +32,12 @@ function Havayolu({ havayollari, setHavayollari }) {
   };
 
   const sil = (id) => {
+    const onay = window.confirm(
+      "Bu havayolunu silmek, bağlı uçak ve uçuşları etkileyebilir. Devam edilsin mi?"
+    );
+
+    if (!onay) return;
+
     setHavayollari(havayollari.filter(h => h.id !== id));
   };
 
@@ -36,6 +48,7 @@ function Havayolu({ havayollari, setHavayollari }) {
 
         <input
           type="number"
+          min="1"
           placeholder="Havayolu ID"
           value={havayoluId}
           onChange={(e) => setHavayoluId(e.target.value)}

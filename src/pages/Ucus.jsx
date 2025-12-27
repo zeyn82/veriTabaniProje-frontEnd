@@ -1,8 +1,13 @@
 import { useState } from "react";
 
-function Ucus({ havalimanlari, havayollari, ucaklar, biletler }) {
-  const [ucuslar, setUcuslar] = useState([]);
-
+function Ucus({
+  havalimanlari,
+  havayollari,
+  ucaklar,
+  biletler,
+  ucuslar,
+  setUcuslar,
+}) {
   const [ucusKodu, setUcusKodu] = useState("");
   const [biletId, setBiletId] = useState("");
   const [havalimaniId, setHavalimaniId] = useState("");
@@ -10,7 +15,7 @@ function Ucus({ havalimanlari, havayollari, ucaklar, biletler }) {
   const [ucakId, setUcakId] = useState("");
 
   const ekle = () => {
-    // 🔴 ZORUNLU ALAN KONTROLÜ
+    /* 🔴 ZORUNLU ALAN KONTROLÜ */
     if (
       !ucusKodu ||
       !biletId ||
@@ -22,36 +27,33 @@ function Ucus({ havalimanlari, havayollari, ucaklar, biletler }) {
       return;
     }
 
-    // 🔴 UÇUŞ KODU FORMAT KONTROLÜ
+    /* 🔴 UÇUŞ KODU FORMAT KONTROLÜ */
     const regex = /^[A-Z]{2,3}-?\d{2,4}$/;
     if (!regex.test(ucusKodu)) {
       alert("Uçuş kodu formatı geçersiz! (Örn: TK-101)");
       return;
     }
 
-    // 🔴 UNIQUE UÇUŞ KODU KONTROLÜ
-    const ayniKodVarMi = ucuslar.some(
-      (u) => u.ucusKodu === ucusKodu
-    );
-    if (ayniKodVarMi) {
+    /* 🔴 UNIQUE UÇUŞ KODU */
+    if (ucuslar.some((u) => u.ucusKodu === ucusKodu)) {
       alert("Bu uçuş kodu zaten mevcut!");
       return;
     }
 
-    // ✅ UÇUŞ EKLEME (BİLET VAROLMA BAĞIMLILIĞI)
+    /* ✅ UÇUŞ EKLEME (FK’LER TAM VE DOĞRU) */
     setUcuslar([
       ...ucuslar,
       {
-        id: Date.now(),
+        id: Date.now(),               // PK
         ucusKodu,
-        biletId: Number(biletId),        // 🔗 FK
-        havalimaniId: Number(havalimaniId),
-        havayoluId: Number(havayoluId),
-        ucakId,
+        biletId: Number(biletId),     // FK → Bilet
+        havalimaniId: Number(havalimaniId), // FK → Havalimanı
+        havayoluId: Number(havayoluId),      // FK → Havayolu
+        ucakId: Number(ucakId),       // FK → Uçak
       },
     ]);
 
-    // FORM TEMİZLEME
+    /* FORM TEMİZLE */
     setUcusKodu("");
     setBiletId("");
     setHavalimaniId("");
@@ -76,20 +78,17 @@ function Ucus({ havalimanlari, havayollari, ucaklar, biletler }) {
           onChange={(e) => setUcusKodu(e.target.value.toUpperCase())}
         />
 
-        {/* 🎟️ BİLET (VAROLMA BAĞIMLILIĞI) */}
-        <select
-          value={biletId}
-          onChange={(e) => setBiletId(e.target.value)}
-        >
+        {/* 🎟️ BİLET */}
+        <select value={biletId} onChange={(e) => setBiletId(e.target.value)}>
           <option value="">Bilet Seç</option>
           {biletler.map((b) => (
-            <option key={b.biletId} value={b.biletId}>
-              Bilet No: {b.biletId} | Koltuk: {b.koltukNo}
+            <option key={b.id} value={b.id}>
+              Bilet No: {b.id} | Koltuk: {b.koltukNo}
             </option>
           ))}
         </select>
 
-        {/* HAVALİMANI */}
+        {/* 🏢 HAVALİMANI */}
         <select
           value={havalimaniId}
           onChange={(e) => setHavalimaniId(e.target.value)}
@@ -102,7 +101,7 @@ function Ucus({ havalimanlari, havayollari, ucaklar, biletler }) {
           ))}
         </select>
 
-        {/* HAVAYOLU */}
+        {/* ✈️ HAVAYOLU */}
         <select
           value={havayoluId}
           onChange={(e) => setHavayoluId(e.target.value)}
@@ -115,11 +114,8 @@ function Ucus({ havalimanlari, havayollari, ucaklar, biletler }) {
           ))}
         </select>
 
-        {/* UÇAK */}
-        <select
-          value={ucakId}
-          onChange={(e) => setUcakId(e.target.value)}
-        >
+        {/* 🛩️ UÇAK */}
+        <select value={ucakId} onChange={(e) => setUcakId(e.target.value)}>
           <option value="">Uçak Seç</option>
           {ucaklar.map((u) => (
             <option key={u.ucakId} value={u.ucakId}>
@@ -153,9 +149,7 @@ function Ucus({ havalimanlari, havayollari, ucaklar, biletler }) {
             </thead>
             <tbody>
               {ucuslar.map((u) => {
-                const bilet = biletler.find(
-                  (b) => b.biletId === u.biletId
-                );
+                const bilet = biletler.find((b) => b.id === u.biletId);
                 const havalimani = havalimanlari.find(
                   (h) => h.id === u.havalimaniId
                 );

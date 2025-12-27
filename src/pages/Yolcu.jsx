@@ -10,9 +10,37 @@ function Yolcu({ yolcular, setYolcular }) {
   const [secilenYolcuId, setSecilenYolcuId] = useState("");
 
   const kaydet = () => {
-    if (!yolcuAdi || !yolcuSoyadi || !telefonNo) return;
+    if (!yolcuAdi || !yolcuSoyadi || !telefonNo) {
+      alert("Tüm alanlar zorunludur.");
+      return;
+    }
+
+    // 📞 TELEFON NUMARASI FORMAT KONTROLÜ
+    if (!/^\d{10,11}$/.test(telefonNo)) {
+      alert("Telefon numarası 10 veya 11 haneli olmalıdır.");
+      return;
+    }
+
+    // ⚠️ AYNI AD + SOYAD UYARISI (UNIQUE DEĞİL, AKADEMİK UYARI)
+    const ayniIsimVarMi = yolcular.some(
+      (y) =>
+        y.yolcuAdi.toLowerCase() === yolcuAdi.toLowerCase() &&
+        y.yolcuSoyadi.toLowerCase() === yolcuSoyadi.toLowerCase() &&
+        y.yolcuId !== duzenlenenId
+    );
+
+    if (ayniIsimVarMi) {
+      if (
+        !window.confirm(
+          "Aynı isim ve soyisimde bir yolcu zaten mevcut. Yine de eklemek istiyor musunuz?"
+        )
+      ) {
+        return;
+      }
+    }
 
     if (duzenlenenId === null) {
+      // ➕ EKLE
       setYolcular((onceki) => [
         ...onceki,
         {
@@ -23,6 +51,7 @@ function Yolcu({ yolcular, setYolcular }) {
         },
       ]);
     } else {
+      // ✏️ GÜNCELLE
       setYolcular((onceki) =>
         onceki.map((y) =>
           y.yolcuId === duzenlenenId
@@ -32,6 +61,7 @@ function Yolcu({ yolcular, setYolcular }) {
       );
     }
 
+    // FORM TEMİZLE
     setYolcuAdi("");
     setYolcuSoyadi("");
     setTelefonNo("");
@@ -39,6 +69,8 @@ function Yolcu({ yolcular, setYolcular }) {
   };
 
   const sil = (id) => {
+    if (!window.confirm("Yolcu silinsin mi?")) return;
+
     setYolcular((onceki) =>
       onceki.filter((y) => y.yolcuId !== id)
     );
@@ -83,7 +115,7 @@ function Yolcu({ yolcular, setYolcular }) {
           />
 
           <input
-            placeholder="Telefon No"
+            placeholder="Telefon No (10-11 hane)"
             value={telefonNo}
             onChange={(e) => setTelefonNo(e.target.value)}
             className="form-group-full"

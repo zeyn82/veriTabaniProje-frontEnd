@@ -6,10 +6,17 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
   const [sehir, setSehir] = useState("");
 
   const ekle = () => {
-    if (!havalimaniId || !havalimaniAdi || !sehir) return;
+    const id = Number(havalimaniId);
+    const ad = havalimaniAdi.trim();
+    const sehirAdi = sehir.trim();
 
-    // Aynı ID tekrar eklenmesin
-    if (havalimanlari.find(h => h.id === Number(havalimaniId))) {
+    if (!id || id <= 0 || !ad || !sehirAdi) {
+      alert("Lütfen geçerli tüm alanları doldurun.");
+      return;
+    }
+
+    // Aynı ID engeli
+    if (havalimanlari.some(h => h.id === id)) {
       alert("Bu Havalimanı ID zaten mevcut.");
       return;
     }
@@ -17,9 +24,9 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
     setHavalimanlari([
       ...havalimanlari,
       {
-        id: Number(havalimaniId),
-        ad: havalimaniAdi,
-        sehir: sehir,
+        id,
+        ad: ad.toUpperCase(),        // tutarlılık
+        sehir: sehirAdi.toUpperCase()
       },
     ]);
 
@@ -29,6 +36,12 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
   };
 
   const sil = (id) => {
+    const onay = window.confirm(
+      "Bu havalimanını silmek, bağlı uçuşları etkileyebilir. Devam edilsin mi?"
+    );
+
+    if (!onay) return;
+
     setHavalimanlari(havalimanlari.filter(h => h.id !== id));
   };
 
@@ -41,6 +54,7 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
           type="number"
           placeholder="Havalimanı ID"
           value={havalimaniId}
+          min="1"
           onChange={(e) => setHavalimaniId(e.target.value)}
         />
 
