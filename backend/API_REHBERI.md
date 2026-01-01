@@ -13,3 +13,4 @@ Sunucu Adresi: `http://localhost:3000`
 - **Havalimanları:** `GET /api/havalimanlari`, `DELETE /api/havalimani-sil/:id`
 - **Uçaklar:** `GET /api/ucaklar`
 - **Bagajlar:** `GET /api/bagajlar`, `POST /api/bagaj-ekle`
+- **Uçuş Görev Atamaları:** `GET /api/ucus-gorev/:id` → Uçuşta hangi pilot ve kabin görevlilerinin görev aldığını listeler
