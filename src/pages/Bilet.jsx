@@ -10,17 +10,14 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
   const [duzenlenenBiletNo, setDuzenlenenBiletNo] = useState(null);
 
   const kaydet = () => {
-    if (
-      !biletNo ||
-      !koltukNo ||
-      !secilenYolcuId ||
-      !secilenUcusId
-    )
+    if (!biletNo || !koltukNo || !secilenYolcuId || !secilenUcusId) {
+      alert("Lütfen tüm alanları doldurun!");
       return;
+    }
 
-    // 🔴 PRIMARY KEY KONTROLÜ (BiletNo)
+    // 🔴 DÜZELTME 1: b.bilet_no olarak kontrol ettik
     const ayniBiletVarMi = biletler.some(
-      (b) => b.biletNo === biletNo
+      (b) => b.bilet_no == biletNo // Not: == kullandık çünkü biri string biri number olabilir
     );
 
     if (ayniBiletVarMi && duzenlenenBiletNo === null) {
@@ -29,32 +26,33 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
     }
 
     if (duzenlenenBiletNo === null) {
-      // ➕ EKLEME
+      // ➕ EKLEME (Veritabanı sütun isimlerini kullandık)
       setBiletler((onceki) => [
         ...onceki,
         {
-          biletNo,                 // PK
-          koltukNo,
-          yolcuId: secilenYolcuId, // FK
-          ucusId: secilenUcusId,   // FK
+          bilet_no: biletNo,          // biletNo -> bilet_no
+          koltuk_no: koltukNo,        // koltukNo -> koltuk_no
+          yolcu_id: secilenYolcuId,   // yolcuId -> yolcu_id
+          ucus_id: secilenUcusId,     // ucusId -> ucus_id
         },
       ]);
     } else {
       // ✏️ GÜNCELLEME
       setBiletler((onceki) =>
         onceki.map((b) =>
-          b.biletNo === duzenlenenBiletNo
+          b.bilet_no === duzenlenenBiletNo
             ? {
                 ...b,
-                koltukNo,
-                yolcuId: secilenYolcuId,
-                ucusId: secilenUcusId,
+                koltuk_no: koltukNo,
+                yolcu_id: secilenYolcuId,
+                ucus_id: secilenUcusId,
               }
             : b
         )
       );
     }
 
+    // Formu temizle
     setBiletNo("");
     setKoltukNo("");
     setSecilenYolcuId("");
@@ -63,17 +61,18 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
   };
 
   const sil = (no) => {
-    setBiletler((onceki) =>
-      onceki.filter((b) => b.biletNo !== no)
-    );
+    if (!window.confirm("Bileti silmek istiyor musun?")) return;
+    // 🔴 DÜZELTME 2: bilet_no'ya göre sildik
+    setBiletler((onceki) => onceki.filter((b) => b.bilet_no !== no));
   };
 
   const duzenle = (b) => {
-    setDuzenlenenBiletNo(b.biletNo);
-    setBiletNo(b.biletNo);
-    setKoltukNo(b.koltukNo);
-    setSecilenYolcuId(b.yolcuId);
-    setSecilenUcusId(b.ucusId);
+    // 🔴 DÜZELTME 3: Verileri çekerken doğru isimleri kullandık
+    setDuzenlenenBiletNo(b.bilet_no);
+    setBiletNo(b.bilet_no);
+    setKoltukNo(b.koltuk_no);
+    setSecilenYolcuId(b.yolcu_id);
+    setSecilenUcusId(b.ucus_id);
   };
 
   return (
@@ -106,15 +105,14 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
           {/* ✈️ UÇUŞ SEÇİMİ */}
           <select
             value={secilenUcusId}
-            onChange={(e) =>
-              setSecilenUcusId(Number(e.target.value))
-            }
+            onChange={(e) => setSecilenUcusId(Number(e.target.value))}
             className="form-group-full"
           >
             <option value="">Uçuş Seç</option>
             {ucuslar.map((u) => (
-              <option key={u.ucusId} value={u.ucusId}>
-                {u.kalkis} → {u.varis}
+              /* 🔴 DÜZELTME 4: ucus_id ve kalkis/varis */
+              <option key={u.ucus_id} value={u.ucus_id}>
+                {u.kalkis} → {u.varis} (ID: {u.ucus_id})
               </option>
             ))}
           </select>
@@ -122,15 +120,14 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
           {/* 👤 YOLCU SEÇİMİ */}
           <select
             value={secilenYolcuId}
-            onChange={(e) =>
-              setSecilenYolcuId(Number(e.target.value))
-            }
+            onChange={(e) => setSecilenYolcuId(Number(e.target.value))}
             className="form-group-full"
           >
             <option value="">Yolcu Seç</option>
             {yolcular.map((y) => (
-              <option key={y.yolcuId} value={y.yolcuId}>
-                {y.yolcuAdi} {y.yolcuSoyadi}
+              /* 🔴 DÜZELTME 5: yolcu_id ve yolcu_ad */
+              <option key={y.yolcu_id} value={y.yolcu_id}>
+                {y.yolcu_ad} {y.yolcu_soyad}
               </option>
             ))}
           </select>
@@ -160,34 +157,29 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
             </thead>
             <tbody>
               {biletler.map((b) => {
-                const yolcu = yolcular.find(
-                  (y) => y.yolcuId === b.yolcuId
-                );
-                const ucus = ucuslar.find(
-                  (u) => u.ucusId === b.ucusId
-                );
+                // 🔴 DÜZELTME 6: Eşleştirme yaparken ID'lerin doğru yazımı
+                const yolcu = yolcular.find((y) => y.yolcu_id === b.yolcu_id);
+                const ucus = ucuslar.find((u) => u.ucus_id === b.ucus_id);
 
                 return (
-                  <tr key={b.biletNo}>
-                    <td>{b.biletNo}</td>
-                    <td>{b.koltukNo}</td>
+                  <tr key={b.bilet_no}>
+                    <td>{b.bilet_no}</td>
+                    <td>{b.koltuk_no}</td>
                     <td>
                       {ucus
                         ? `${ucus.kalkis} → ${ucus.varis}`
-                        : "—"}
+                        : `ID: ${b.ucus_id} (Bulunamadı)`}
                     </td>
                     <td>
                       {yolcu
-                        ? `${yolcu.yolcuAdi} ${yolcu.yolcuSoyadi}`
-                        : "—"}
+                        ? `${yolcu.yolcu_ad} ${yolcu.yolcu_soyad}`
+                        : `ID: ${b.yolcu_id} (Bulunamadı)`}
                     </td>
                     <td>
-                      <button onClick={() => duzenle(b)}>
-                        Düzenle
-                      </button>
+                      <button onClick={() => duzenle(b)}>Düzenle</button>
                       <button
                         className="danger"
-                        onClick={() => sil(b.biletNo)}
+                        onClick={() => sil(b.bilet_no)}
                         style={{ marginLeft: "6px" }}
                       >
                         Sil

@@ -6,7 +6,7 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
   const [sehir, setSehir] = useState("");
 
   const ekle = () => {
-    const id = havalimaniId.trim(); // ✅ STRING
+    const id = havalimaniId.trim(); 
     const ad = havalimaniAdi.trim();
     const sehirAdi = sehir.trim();
 
@@ -15,16 +15,19 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
       return;
     }
 
-    if (havalimanlari.some(h => h.id === id)) {
+    // 🔴 DÜZELTME 1: Kontrol ederken veritabanı ismini kullandık (havalimani_id)
+    if (havalimanlari.some(h => h.havalimani_id === id)) {
       alert("Bu Havalimanı ID zaten var.");
       return;
     }
 
+    // 🔴 DÜZELTME 2: Listeye eklerken de veritabanı formatına uygun ekledik
+    // (Not: Bu şimdilik sadece ekranda gösterir, veritabanına kaydetmek için fetch/POST gerekir)
     setHavalimanlari([
       ...havalimanlari,
       {
-        id,
-        ad: ad.toUpperCase(),
+        havalimani_id: id,       // id yerine havalimani_id
+        havalimani_adi: ad.toUpperCase(), // ad yerine havalimani_adi
         sehir: sehirAdi.toUpperCase(),
       },
     ]);
@@ -36,7 +39,8 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
 
   const sil = (id) => {
     if (!window.confirm("Silmek istediğine emin misin?")) return;
-    setHavalimanlari(havalimanlari.filter(h => h.id !== id));
+    // 🔴 DÜZELTME 3: Silerken doğru ID'ye göre filtreledik
+    setHavalimanlari(havalimanlari.filter(h => h.havalimani_id !== id));
   };
 
   return (
@@ -80,12 +84,13 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
           </thead>
           <tbody>
             {havalimanlari.map(h => (
-              <tr key={h.id}>
-                <td>{h.id}</td>
-                <td>{h.ad}</td>
-                <td>{h.sehir}</td>
+              /* 🔴 DÜZELTME 4: Veritabanı sütun isimlerini buraya yazdık */
+              <tr key={h.havalimani_id}>
+                <td>{h.havalimani_id}</td>  {/* h.id yerine */}
+                <td>{h.havalimani_adi}</td> {/* h.ad yerine */}
+                <td>{h.sehir}</td>          {/* Bu zaten doğruydu */}
                 <td>
-                  <button className="danger" onClick={() => sil(h.id)}>
+                  <button className="danger" onClick={() => sil(h.havalimani_id)}>
                     Sil
                   </button>
                 </td>

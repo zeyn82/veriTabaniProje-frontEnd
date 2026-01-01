@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
   BrowserRouter,
@@ -249,7 +250,6 @@ function App() {
           <Route path="/havayolu" element={<Havayolu havayollari={havayollari} setHavayollari={setHavayollari} />} />
           <Route path="/yolcu" element={<Yolcu yolcular={yolcular} setYolcular={setYolcular} />} />
 
-          {/* Uçuşlar ve Yolcular Bilet Sayfasına Gidiyor */}
           <Route
             path="/bilet"
             element={
@@ -262,7 +262,6 @@ function App() {
             }
           />
 
-          {/* Diğer Veriler Uçuş Sayfasına Gidiyor (Dropdown için gerekli) */}
           <Route
             path="/ucus"
             element={
@@ -278,7 +277,13 @@ function App() {
           />
 
           <Route path="/bagaj" element={<Bagaj yolcular={yolcular} bagajlar={bagajlar} setBagajlar={setBagajlar} />} />
-          <Route path="/ucak" element={<Ucak />} />
+          
+          {/* 🔥🔥🔥 DÜZELTİLEN KISIM BURASI 🔥🔥🔥 */}
+          <Route 
+             path="/ucak" 
+             element={<Ucak ucaklar={ucaklar} setUcaklar={setUcaklar} />} 
+          />
+
           <Route path="/personel" element={<Personel personeller={personeller} setPersoneller={setPersoneller} />} />
           <Route path="/pilot" element={<Pilot personeller={personeller} />} />
           <Route path="/kabin" element={<Kabin personeller={personeller} />} />

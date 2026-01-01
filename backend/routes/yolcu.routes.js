@@ -1,10 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const yolcuController = require('../controllers/yolcu.controller');
+const pool = require('../db');
 
-router.get('/yolcular', yolcuController.getAll);
-router.post('/yolcu-ekle', yolcuController.create);
-router.put('/yolcu-guncelle/:id', yolcuController.update);
-router.delete('/yolcu-sil/:id', yolcuController.remove);
+// Tüm yolcuları getir
+router.get('/', async (req, res) => {
+  try {
+    // DİKKAT: Veritabanından verileri çekiyoruz
+    const result = await pool.query('SELECT * FROM yolcu');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Sunucu Hatası');
+  }
+});
 
 module.exports = router;

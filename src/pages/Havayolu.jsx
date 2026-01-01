@@ -5,7 +5,7 @@ function Havayolu({ havayollari, setHavayollari }) {
   const [havayoluAdi, setHavayoluAdi] = useState("");
 
   const ekle = () => {
-    const id = havayoluId.trim(); // ✅ STRING
+    const id = havayoluId.trim();
     const ad = havayoluAdi.trim();
 
     if (!id || !ad) {
@@ -13,14 +13,19 @@ function Havayolu({ havayollari, setHavayollari }) {
       return;
     }
 
-    if (havayollari.some(h => h.id === id)) {
+    // 🔴 DÜZELTME 1: Kontrol ederken veritabanı ismini kullandık (havayolu_id)
+    if (havayollari.some(h => h.havayolu_id === id)) {
       alert("Bu havayolu ID zaten var.");
       return;
     }
 
+    // 🔴 DÜZELTME 2: Listeye eklerken veritabanı formatını kullandık
     setHavayollari([
       ...havayollari,
-      { id, ad: ad.toUpperCase() },
+      { 
+        havayolu_id: id,             // id -> havayolu_id
+        havayolu_adi: ad.toUpperCase() // ad -> havayolu_adi
+      },
     ]);
 
     setHavayoluId("");
@@ -29,7 +34,8 @@ function Havayolu({ havayollari, setHavayollari }) {
 
   const sil = (id) => {
     if (!window.confirm("Silmek istiyor musun?")) return;
-    setHavayollari(havayollari.filter(h => h.id !== id));
+    // 🔴 DÜZELTME 3: Silerken doğru ID'yi kullandık
+    setHavayollari(havayollari.filter(h => h.havayolu_id !== id));
   };
 
   return (
@@ -66,11 +72,12 @@ function Havayolu({ havayollari, setHavayollari }) {
           </thead>
           <tbody>
             {havayollari.map(h => (
-              <tr key={h.id}>
-                <td>{h.id}</td>
-                <td>{h.ad}</td>
+              /* 🔴 DÜZELTME 4: Veritabanı sütun isimlerini buraya yazdık */
+              <tr key={h.havayolu_id}>
+                <td>{h.havayolu_id}</td>   {/* h.id yerine */}
+                <td>{h.havayolu_adi}</td>  {/* h.ad yerine */}
                 <td>
-                  <button className="danger" onClick={() => sil(h.id)}>
+                  <button className="danger" onClick={() => sil(h.havayolu_id)}>
                     Sil
                   </button>
                 </td>

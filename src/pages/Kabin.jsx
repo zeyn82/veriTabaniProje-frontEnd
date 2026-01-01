@@ -1,4 +1,8 @@
+import { useState } from "react";
+
 function Kabin({ personeller }) {
+  // Backend'den gelen 'rol' verisine göre filtreleme yapıyoruz.
+  // (Backend'deki JOIN işlemi sayesinde artık p.rol bilgisi geliyor)
   const kabinler = personeller.filter(p => p.rol === "Kabin");
 
   return (
@@ -6,22 +10,30 @@ function Kabin({ personeller }) {
       <div className="card">
         <h2>Kabin Görevlileri</h2>
 
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th><th>Ad</th><th>Soyad</th>
-            </tr>
-          </thead>
-          <tbody>
-            {kabinler.map(k => (
-              <tr key={k.personel_id}>
-                <td>{k.personel_id}</td>
-                <td>{k.ad}</td>
-                <td>{k.soyad}</td>
+        {kabinler.length === 0 ? (
+          <p>Kayıtlı kabin görevlisi bulunamadı.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Ad</th>
+                <th>Soyad</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {kabinler.map(k => (
+                <tr key={k.personel_id}>
+                  <td>{k.personel_id}</td>
+                  
+                  {/* 🔴 DÜZELTME: Veritabanı sütun isimlerini kullandık */}
+                  <td>{k.personel_ad}</td>    {/* k.ad yerine */}
+                  <td>{k.personel_soyad}</td> {/* k.soyad yerine */}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

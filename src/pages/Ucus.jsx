@@ -1,69 +1,52 @@
 import { useState } from "react";
 
-function Ucus({
-  havalimanlari,
-  havayollari,
-  ucaklar,
-  biletler,
-  ucuslar,
-  setUcuslar,
+function Ucus({ 
+  ucuslar, setUcuslar, 
+  havalimanlari, havayollari, ucaklar 
 }) {
-  const [ucusKodu, setUcusKodu] = useState("");
-  const [biletId, setBiletId] = useState("");
-  const [havalimaniId, setHavalimaniId] = useState("");
-  const [havayoluId, setHavayoluId] = useState("");
+  const [ucusId, setUcusId] = useState("");
+  const [kalkis, setKalkis] = useState("");
+  const [varis, setVaris] = useState("");
   const [ucakId, setUcakId] = useState("");
+  const [havayoluId, setHavayoluId] = useState("");
+  const [kalkisYerId, setKalkisYerId] = useState("");
+  const [varisYerId, setVarisYerId] = useState("");
 
   const ekle = () => {
-    /* 🔴 ZORUNLU ALAN KONTROLÜ */
-    if (
-      !ucusKodu ||
-      !biletId ||
-      !havalimaniId ||
-      !havayoluId ||
-      !ucakId
-    ) {
-      alert("Tüm alanlar zorunludur!");
+    if (!ucusId || !kalkis || !varis || !ucakId || !havayoluId || !kalkisYerId || !varisYerId) {
+      alert("Lütfen tüm alanları doldurun!");
       return;
     }
 
-    /* 🔴 UÇUŞ KODU FORMAT KONTROLÜ */
-    const regex = /^[A-Z]{2,3}-?\d{2,4}$/;
-    if (!regex.test(ucusKodu)) {
-      alert("Uçuş kodu formatı geçersiz! (Örn: TK-101)");
-      return;
-    }
+    // Arayüzde anında göstermek için geçici objeyi oluşturuyoruz
+    const yeniUcus = {
+      ucus_id: ucusId,
+      kalkis: kalkis,
+      varis: varis,
+      
+      // İsimleri listeden bulup elle ekliyoruz ki sayfa yenilenmeden görünsün
+      havayolu_adi: havayollari.find(h => h.havayolu_id === havayoluId)?.havayolu_adi || havayoluId,
+      ucak_model: ucaklar.find(u => u.ucak_id === ucakId)?.model || ucakId,
+      kalkis_yeri: havalimanlari.find(h => h.havalimani_id === kalkisYerId)?.havalimani_adi || kalkisYerId,
+      varis_yeri: havalimanlari.find(h => h.havalimani_id === varisYerId)?.havalimani_adi || varisYerId
+    };
 
-    /* 🔴 UNIQUE UÇUŞ KODU */
-    if (ucuslar.some((u) => u.ucusKodu === ucusKodu)) {
-      alert("Bu uçuş kodu zaten mevcut!");
-      return;
-    }
+    setUcuslar([...ucuslar, yeniUcus]);
+    // Not: Burada ayrıca Backend'e POST isteği atılması gerekir (fetch)
 
-    /* ✅ UÇUŞ EKLEME (FK’LER TAM VE DOĞRU) */
-    setUcuslar([
-      ...ucuslar,
-      {
-        id: Date.now(),               // PK
-        ucusKodu,
-        biletId: Number(biletId),     // FK → Bilet
-        havalimaniId: Number(havalimaniId), // FK → Havalimanı
-        havayoluId: Number(havayoluId),      // FK → Havayolu
-        ucakId: Number(ucakId),       // FK → Uçak
-      },
-    ]);
-
-    /* FORM TEMİZLE */
-    setUcusKodu("");
-    setBiletId("");
-    setHavalimaniId("");
-    setHavayoluId("");
+    // Formu temizle
+    setUcusId("");
+    setKalkis("");
+    setVaris("");
     setUcakId("");
+    setHavayoluId("");
+    setKalkisYerId("");
+    setVarisYerId("");
   };
 
   const sil = (id) => {
-    if (!window.confirm("Uçuş silinsin mi?")) return;
-    setUcuslar(ucuslar.filter((u) => u.id !== id));
+    if (!window.confirm("Uçuşu silmek istiyor musun?")) return;
+    setUcuslar(ucuslar.filter(u => u.ucus_id !== id));
   };
 
   return (
@@ -71,113 +54,132 @@ function Ucus({
       <div className="card">
         <h2>Uçuş Yönetimi</h2>
 
-        {/* UÇUŞ KODU */}
-        <input
-          placeholder="Uçuş Kodu (Örn: TK-101)"
-          value={ucusKodu}
-          onChange={(e) => setUcusKodu(e.target.value.toUpperCase())}
-        />
+        <div className="form-group">
+          {/* UÇUŞ ID */}
+          <input 
+            placeholder="Uçuş ID (Örn: 1001)" 
+            type="number"
+            value={ucusId} 
+            onChange={e => setUcusId(e.target.value)} 
+            className="form-group-half"
+          />
 
-        {/* 🎟️ BİLET */}
-        <select value={biletId} onChange={(e) => setBiletId(e.target.value)}>
-          <option value="">Bilet Seç</option>
-          {biletler.map((b) => (
-            <option key={b.id} value={b.id}>
-              Bilet No: {b.id} | Koltuk: {b.koltukNo}
-            </option>
-          ))}
-        </select>
+          {/* HAVAYOLU SEÇİMİ */}
+          <select 
+            value={havayoluId} 
+            onChange={e => setHavayoluId(e.target.value)} 
+            className="form-group-half"
+          >
+            <option value="">Havayolu Seç...</option>
+            {havayollari.map(h => (
+              <option key={h.havayolu_id} value={h.havayolu_id}>
+                {h.havayolu_adi}
+              </option>
+            ))}
+          </select>
 
-        {/* 🏢 HAVALİMANI */}
-        <select
-          value={havalimaniId}
-          onChange={(e) => setHavalimaniId(e.target.value)}
-        >
-          <option value="">Havalimanı Seç</option>
-          {havalimanlari.map((h) => (
-            <option key={h.id} value={h.id}>
-              {h.ad}
-            </option>
-          ))}
-        </select>
+          {/* UÇAK SEÇİMİ */}
+          <select 
+            value={ucakId} 
+            onChange={e => setUcakId(e.target.value)} 
+            className="form-group-full"
+          >
+            <option value="">Uçak Seç...</option>
+            {ucaklar.map(u => (
+              <option key={u.ucak_id} value={u.ucak_id}>
+                {u.model} (Kapasite: {u.kapasite})
+              </option>
+            ))}
+          </select>
 
-        {/* ✈️ HAVAYOLU */}
-        <select
-          value={havayoluId}
-          onChange={(e) => setHavayoluId(e.target.value)}
-        >
-          <option value="">Havayolu Seç</option>
-          {havayollari.map((h) => (
-            <option key={h.id} value={h.id}>
-              {h.ad}
-            </option>
-          ))}
-        </select>
+          {/* KALKIŞ YERİ */}
+          <select 
+            value={kalkisYerId} 
+            onChange={e => setKalkisYerId(e.target.value)} 
+            className="form-group-half"
+          >
+            <option value="">Kalkış Yeri...</option>
+            {havalimanlari.map(h => (
+              <option key={h.havalimani_id} value={h.havalimani_id}>
+                {h.havalimani_adi} ({h.sehir})
+              </option>
+            ))}
+          </select>
 
-        {/* 🛩️ UÇAK */}
-        <select value={ucakId} onChange={(e) => setUcakId(e.target.value)}>
-          <option value="">Uçak Seç</option>
-          {ucaklar.map((u) => (
-            <option key={u.ucakId} value={u.ucakId}>
-              {u.model} ({u.ucakId})
-            </option>
-          ))}
-        </select>
+          {/* VARIŞ YERİ */}
+          <select 
+            value={varisYerId} 
+            onChange={e => setVarisYerId(e.target.value)} 
+            className="form-group-half"
+          >
+            <option value="">Varış Yeri...</option>
+            {havalimanlari.map(h => (
+              <option key={h.havalimani_id} value={h.havalimani_id}>
+                {h.havalimani_adi} ({h.sehir})
+              </option>
+            ))}
+          </select>
 
-        <button className="primary" onClick={ekle}>
-          Uçuş Ekle
-        </button>
+          {/* TARİHLER */}
+          <div style={{width: '100%', display:'flex', gap:'10px'}}>
+             <div style={{flex:1}}>
+                <label style={{fontSize:'0.8rem'}}>Kalkış Zamanı</label>
+                <input type="datetime-local" value={kalkis} onChange={e => setKalkis(e.target.value)} />
+             </div>
+             <div style={{flex:1}}>
+                <label style={{fontSize:'0.8rem'}}>Varış Zamanı</label>
+                <input type="datetime-local" value={varis} onChange={e => setVaris(e.target.value)} />
+             </div>
+          </div>
+
+          <button className="primary" onClick={ekle} style={{marginTop:'10px'}}>Ekle</button>
+        </div>
       </div>
 
-      {/* 📋 UÇUŞ LİSTESİ */}
       <div className="card">
         <h3>Uçuş Listesi</h3>
-
+        
         {ucuslar.length === 0 ? (
-          <p>Henüz uçuş eklenmedi.</p>
+           <p>Listelenecek uçuş bulunamadı.</p> 
         ) : (
           <table>
             <thead>
               <tr>
-                <th>Uçuş Kodu</th>
-                <th>Bilet</th>
-                <th>Havalimanı</th>
+                <th>Uçuş ID</th>
                 <th>Havayolu</th>
                 <th>Uçak</th>
+                <th>Kalkış Yeri</th>
+                <th>Varış Yeri</th>
+                <th>Saatler</th>
                 <th>İşlem</th>
               </tr>
             </thead>
             <tbody>
-              {ucuslar.map((u) => {
-                const bilet = biletler.find((b) => b.id === u.biletId);
-                const havalimani = havalimanlari.find(
-                  (h) => h.id === u.havalimaniId
-                );
-                const havayolu = havayollari.find(
-                  (h) => h.id === u.havayoluId
-                );
-                const ucak = ucaklar.find(
-                  (x) => x.ucakId === u.ucakId
-                );
-
-                return (
-                  <tr key={u.id}>
-                    <td>{u.ucusKodu}</td>
-                    <td>{bilet?.koltukNo}</td>
-                    <td>{havalimani?.ad}</td>
-                    <td>{havayolu?.ad}</td>
-                    <td>{ucak?.model}</td>
-                    <td>
-                      <button
-                        className="danger"
-                        onClick={() => sil(u.id)}
-                      >
-                        Sil
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {ucuslar.map(u => (
+                <tr key={u.ucus_id}>
+                  <td><strong>{u.ucus_id}</strong></td>
+                  
+                  {/* Backend'den gelen isimlendirilmiş veriler */}
+                  <td>{u.havayolu_adi || u.havayolu_id}</td> 
+                  <td>{u.ucak_model || u.ucak_id}</td> 
+                  
+                  {/* Kalkış ve Varış yerleri */}
+                  <td>{u.kalkis_yeri || u.kalkishavalimani_id}</td>
+                  <td>{u.varis_yeri || u.varishavalimani_id}</td>
+                  
+                  {/* Tarih formatlama */}
+                  <td style={{fontSize:'0.85rem'}}>
+                    K: {new Date(u.kalkis).toLocaleString('tr-TR')} <br/>
+                    V: {new Date(u.varis).toLocaleString('tr-TR')}
+                  </td>
+                  
+                  <td>
+                    <button className="danger" onClick={() => sil(u.ucus_id)}>
+                      Sil
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
