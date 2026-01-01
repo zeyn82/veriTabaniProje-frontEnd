@@ -22,3 +22,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# --- GENEL ---
+.DS_Store
+node_modules/
+/node_modules
+*.log
+
+# --- FRONTEND (Ana dizindekiler) ---
+dist/
+dist-ssr/
+*.local
+
+# --- BACKEND (Backend klasörü içindekiler) ---
+backend/node_modules/
+backend/.env
+.env
+
+# --- EDİTÖR ---
+.vscode/
+.idea/
