@@ -6,18 +6,17 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
   const [sehir, setSehir] = useState("");
 
   const ekle = () => {
-    const id = Number(havalimaniId);
+    const id = havalimaniId.trim(); // ✅ STRING
     const ad = havalimaniAdi.trim();
     const sehirAdi = sehir.trim();
 
-    if (!id || id <= 0 || !ad || !sehirAdi) {
-      alert("Lütfen geçerli tüm alanları doldurun.");
+    if (!id || !ad || !sehirAdi) {
+      alert("Tüm alanları doldurun.");
       return;
     }
 
-    // Aynı ID engeli
     if (havalimanlari.some(h => h.id === id)) {
-      alert("Bu Havalimanı ID zaten mevcut.");
+      alert("Bu Havalimanı ID zaten var.");
       return;
     }
 
@@ -25,8 +24,8 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
       ...havalimanlari,
       {
         id,
-        ad: ad.toUpperCase(),        // tutarlılık
-        sehir: sehirAdi.toUpperCase()
+        ad: ad.toUpperCase(),
+        sehir: sehirAdi.toUpperCase(),
       },
     ]);
 
@@ -36,12 +35,7 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
   };
 
   const sil = (id) => {
-    const onay = window.confirm(
-      "Bu havalimanını silmek, bağlı uçuşları etkileyebilir. Devam edilsin mi?"
-    );
-
-    if (!onay) return;
-
+    if (!window.confirm("Silmek istediğine emin misin?")) return;
     setHavalimanlari(havalimanlari.filter(h => h.id !== id));
   };
 
@@ -51,10 +45,9 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
         <h2>Havalimanı Yönetimi</h2>
 
         <input
-          type="number"
-          placeholder="Havalimanı ID"
+          type="text"
+          placeholder="Havalimanı ID (IST)"
           value={havalimaniId}
-          min="1"
           onChange={(e) => setHavalimaniId(e.target.value)}
         />
 
@@ -76,34 +69,30 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
       <div className="card">
         <h3>Havalimanı Listesi</h3>
 
-        {havalimanlari.length === 0 ? (
-          <p>Kayıtlı havalimanı yok.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Havalimanı</th>
-                <th>Şehir</th>
-                <th>İşlem</th>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ad</th>
+              <th>Şehir</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {havalimanlari.map(h => (
+              <tr key={h.id}>
+                <td>{h.id}</td>
+                <td>{h.ad}</td>
+                <td>{h.sehir}</td>
+                <td>
+                  <button className="danger" onClick={() => sil(h.id)}>
+                    Sil
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {havalimanlari.map((h) => (
-                <tr key={h.id}>
-                  <td>{h.id}</td>
-                  <td>{h.ad}</td>
-                  <td>{h.sehir}</td>
-                  <td>
-                    <button className="danger" onClick={() => sil(h.id)}>
-                      Sil
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

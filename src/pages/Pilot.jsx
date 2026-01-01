@@ -6,28 +6,22 @@ function Pilot({ personeller }) {
       <div className="card">
         <h2>Pilot Listesi</h2>
 
-        {pilotlar.length === 0 ? (
-          <p>Henüz pilot atanmadı.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Personel ID</th>
-                <th>Ad</th>
-                <th>Soyad</th>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Ad</th><th>Soyad</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pilotlar.map(p => (
+              <tr key={p.personel_id}>
+                <td>{p.personel_id}</td>
+                <td>{p.ad}</td>
+                <td>{p.soyad}</td>
               </tr>
-            </thead>
-            <tbody>
-              {pilotlar.map((p) => (
-                <tr key={p.personelId}>
-                  <td>{p.personelId}</td>
-                  <td>{p.ad}</td>
-                  <td>{p.soyad}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

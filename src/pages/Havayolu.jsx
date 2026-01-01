@@ -5,26 +5,22 @@ function Havayolu({ havayollari, setHavayollari }) {
   const [havayoluAdi, setHavayoluAdi] = useState("");
 
   const ekle = () => {
-    const id = Number(havayoluId);
+    const id = havayoluId.trim(); // ✅ STRING
     const ad = havayoluAdi.trim();
 
-    if (!id || id <= 0 || !ad) {
-      alert("Lütfen geçerli bir Havayolu ID ve adı giriniz.");
+    if (!id || !ad) {
+      alert("Alanları doldurun.");
       return;
     }
 
-    // Aynı ID engeli (PRIMARY KEY)
     if (havayollari.some(h => h.id === id)) {
-      alert("Bu Havayolu ID zaten mevcut.");
+      alert("Bu havayolu ID zaten var.");
       return;
     }
 
     setHavayollari([
       ...havayollari,
-      {
-        id,
-        ad: ad.toUpperCase(), // tutarlılık
-      },
+      { id, ad: ad.toUpperCase() },
     ]);
 
     setHavayoluId("");
@@ -32,12 +28,7 @@ function Havayolu({ havayollari, setHavayollari }) {
   };
 
   const sil = (id) => {
-    const onay = window.confirm(
-      "Bu havayolunu silmek, bağlı uçak ve uçuşları etkileyebilir. Devam edilsin mi?"
-    );
-
-    if (!onay) return;
-
+    if (!window.confirm("Silmek istiyor musun?")) return;
     setHavayollari(havayollari.filter(h => h.id !== id));
   };
 
@@ -47,9 +38,8 @@ function Havayolu({ havayollari, setHavayollari }) {
         <h2>Havayolu Yönetimi</h2>
 
         <input
-          type="number"
-          min="1"
-          placeholder="Havayolu ID"
+          type="text"
+          placeholder="Havayolu ID (THY)"
           value={havayoluId}
           onChange={(e) => setHavayoluId(e.target.value)}
         />
@@ -66,32 +56,28 @@ function Havayolu({ havayollari, setHavayollari }) {
       <div className="card">
         <h3>Havayolu Listesi</h3>
 
-        {havayollari.length === 0 ? (
-          <p>Kayıtlı havayolu yok.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Havayolu Adı</th>
-                <th>İşlem</th>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ad</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {havayollari.map(h => (
+              <tr key={h.id}>
+                <td>{h.id}</td>
+                <td>{h.ad}</td>
+                <td>
+                  <button className="danger" onClick={() => sil(h.id)}>
+                    Sil
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {havayollari.map((h) => (
-                <tr key={h.id}>
-                  <td>{h.id}</td>
-                  <td>{h.ad}</td>
-                  <td>
-                    <button className="danger" onClick={() => sil(h.id)}>
-                      Sil
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
