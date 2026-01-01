@@ -22,6 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+<<<<<<< HEAD
 
 # --- GENEL ---
 .DS_Store
@@ -42,3 +43,6 @@ backend/.env
 # --- EDİTÖR ---
 .vscode/
 .idea/
+=======
+.env
+>>>>>>> ccb9541f42dec69ef755d081f58239081c5025a3

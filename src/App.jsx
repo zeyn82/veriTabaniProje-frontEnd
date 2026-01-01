@@ -21,7 +21,7 @@ import Bilet from "./pages/Bilet";
 
 import { motion, AnimatePresence } from "framer-motion";
 
-/* 🔹 SAYFA BAŞLIĞI */
+/* 🔹 SAYFA BAŞLIĞI BİLEŞENİ */
 function SayfaBasligi() {
   const location = useLocation();
 
@@ -61,23 +61,69 @@ function App() {
   const [menuAcik, setMenuAcik] = useState(false);
   const [dark, setDark] = useState(false);
 
-  /* 🌙 DARK MODE */
+  /* 🌙 DARK MODE AYARI */
   useEffect(() => {
     if (dark) document.body.classList.add("dark");
     else document.body.classList.remove("dark");
   }, [dark]);
 
-  /* STATE’LER */
+  /* 📦 STATE’LER (Verilerin Saklandığı Kutular) */
   const [havalimanlari, setHavalimanlari] = useState([]);
   const [havayollari, setHavayollari] = useState([]);
   const [ucaklar, setUcaklar] = useState([]);
   const [yolcular, setYolcular] = useState([]);
   const [biletler, setBiletler] = useState([]);
-  const [ucuslar, setUcuslar] = useState([]);   // 🔑 BİLET İÇİN GEREKLİ
+  const [ucuslar, setUcuslar] = useState([]);
   const [bagajlar, setBagajlar] = useState([]);
   const [personeller, setPersoneller] = useState([]);
 
-  /* 🔗 MENÜ */
+  /* 🔥🔥🔥 TÜM VERİLERİ BACKEND'DEN ÇEKME 🔥🔥🔥 */
+  useEffect(() => {
+    const verileriGetir = async () => {
+      try {
+        console.log("📡 Tüm veriler Backend'den isteniyor...");
+
+        // 1. Yolcular
+        const yolcuCevap = await fetch("http://localhost:3000/api/yolcu");
+        if (yolcuCevap.ok) setYolcular(await yolcuCevap.json());
+
+        // 2. Uçuşlar
+        const ucusCevap = await fetch("http://localhost:3000/api/ucus");
+        if (ucusCevap.ok) setUcuslar(await ucusCevap.json());
+
+        // 3. Biletler
+        const biletCevap = await fetch("http://localhost:3000/api/bilet");
+        if (biletCevap.ok) setBiletler(await biletCevap.json());
+
+        // 4. Havalimanları
+        const havalimaniCevap = await fetch("http://localhost:3000/api/havalimani");
+        if (havalimaniCevap.ok) setHavalimanlari(await havalimaniCevap.json());
+
+        // 5. Havayolları
+        const havayoluCevap = await fetch("http://localhost:3000/api/havayolu");
+        if (havayoluCevap.ok) setHavayollari(await havayoluCevap.json());
+
+        // 6. Uçaklar
+        const ucakCevap = await fetch("http://localhost:3000/api/ucak");
+        if (ucakCevap.ok) setUcaklar(await ucakCevap.json());
+
+        // 7. Personeller
+        const personelCevap = await fetch("http://localhost:3000/api/personel");
+        if (personelCevap.ok) setPersoneller(await personelCevap.json());
+        
+        // 8. Bagajlar
+        const bagajCevap = await fetch("http://localhost:3000/api/bagaj");
+        if (bagajCevap.ok) setBagajlar(await bagajCevap.json());
+
+      } catch (error) {
+        console.error("❌ Veri çekme hatası (Sunucu kapalı veya rota yok):", error);
+      }
+    };
+
+    verileriGetir();
+  }, []); 
+
+  /* 🔗 MENÜ LİNKLERİ */
   const linkler = [
     { path: "/", label: "Ana Sayfa" },
     { path: "/havalimani", label: "Havalimanı" },
@@ -130,10 +176,11 @@ function App() {
         </div>
       </nav>
 
-      {/* 🔹 MENÜ */}
+      {/* 🔹 MENÜ (Animasyonlu) */}
       <AnimatePresence>
         {menuAcik && (
           <>
+            {/* Arka plan karartması */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
@@ -147,6 +194,7 @@ function App() {
               }}
             />
 
+            {/* Yan Menü Paneli */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
@@ -192,7 +240,7 @@ function App() {
         )}
       </AnimatePresence>
 
-      {/* 🔹 SAYFALAR */}
+      {/* 🔹 SAYFALAR VE ROTALAR */}
       <div style={{ padding: "20px" }}>
         <Routes>
           <Route path="/" element={<AnaSayfa />} />
@@ -201,19 +249,20 @@ function App() {
           <Route path="/havayolu" element={<Havayolu havayollari={havayollari} setHavayollari={setHavayollari} />} />
           <Route path="/yolcu" element={<Yolcu yolcular={yolcular} setYolcular={setYolcular} />} />
 
-          {/* 🔥 BİLET → UÇUŞ BAĞLANTISI TAM */}
+          {/* Uçuşlar ve Yolcular Bilet Sayfasına Gidiyor */}
           <Route
             path="/bilet"
             element={
               <Bilet
                 yolcular={yolcular}
-                ucuslar={ucuslar}        // ✅ KRİTİK DÜZELTME
+                ucuslar={ucuslar}
                 biletler={biletler}
                 setBiletler={setBiletler}
               />
             }
           />
 
+          {/* Diğer Veriler Uçuş Sayfasına Gidiyor (Dropdown için gerekli) */}
           <Route
             path="/ucus"
             element={
