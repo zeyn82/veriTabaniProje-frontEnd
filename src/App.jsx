@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   BrowserRouter,
@@ -278,10 +277,16 @@ function App() {
 
           <Route path="/bagaj" element={<Bagaj yolcular={yolcular} bagajlar={bagajlar} setBagajlar={setBagajlar} />} />
           
-          {/* 🔥🔥🔥 DÜZELTİLEN KISIM BURASI 🔥🔥🔥 */}
+          {/* 🔥🔥🔥 DÜZELTİLEN KISIM: havayollari props olarak eklendi! 🔥🔥🔥 */}
           <Route 
              path="/ucak" 
-             element={<Ucak ucaklar={ucaklar} setUcaklar={setUcaklar} />} 
+             element={
+                <Ucak 
+                   ucaklar={ucaklar} 
+                   setUcaklar={setUcaklar} 
+                   havayollari={havayollari} 
+                />
+             } 
           />
 
           <Route path="/personel" element={<Personel personeller={personeller} setPersoneller={setPersoneller} />} />

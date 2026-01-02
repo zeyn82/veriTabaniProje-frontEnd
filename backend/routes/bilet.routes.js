@@ -1,16 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db'); // Veritabanı bağlantımızı çağırdık
+const pool = require('../db');
 
-// 1. TÜM BİLETLERİ GETİR (Frontend bunu istiyor)
-// Adres: /api/bilet
+// 1. LİSTELE (GET)
 router.get('/', async (req, res) => {
   try {
-    // Biletleri getirirken karmaşık ID'ler yerine okunabilir bilgileri JOIN ile çekiyoruz
-    const query = `
-      SELECT * FROM bilet
-    `;
-    const result = await pool.query(query);
+    const result = await pool.query('SELECT * FROM bilet');
     res.json(result.rows);
   } catch (err) {
     console.error(err.message);
@@ -18,8 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. BİLET SAT (EKLE)
-// Adres: /api/bilet
+// 2. EKLE (POST)
 router.post('/', async (req, res) => {
   try {
     const { bilet_no, koltuk_no, ucus_id, yolcu_id } = req.body;
@@ -32,12 +26,11 @@ router.post('/', async (req, res) => {
     res.json(yeniBilet.rows[0]);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Bilet eklenirken hata oluştu');
+    res.status(500).send('Kayıt hatası: ' + err.message);
   }
 });
 
-// 3. BİLET GÜNCELLE
-// Adres: /api/bilet/:no
+// 3. GÜNCELLE (PUT)
 router.put('/:no', async (req, res) => {
   try {
     const { no } = req.params;
@@ -55,13 +48,12 @@ router.put('/:no', async (req, res) => {
   }
 });
 
-// 4. BİLET SİL
-// Adres: /api/bilet/:no
+// 4. SİL (DELETE)
 router.delete('/:no', async (req, res) => {
   try {
     const { no } = req.params;
     await pool.query("DELETE FROM bilet WHERE bilet_no = $1", [no]);
-    res.json("Bilet silindi!");
+    res.json("Silindi");
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Silme hatası');

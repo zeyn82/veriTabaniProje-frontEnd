@@ -9,65 +9,80 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
 
   const [duzenlenenBiletNo, setDuzenlenenBiletNo] = useState(null);
 
-  const kaydet = () => {
+  // 🔥 KAYDET (HEM EKLEME HEM GÜNCELLEME)
+  const kaydet = async () => {
     if (!biletNo || !koltukNo || !secilenYolcuId || !secilenUcusId) {
       alert("Lütfen tüm alanları doldurun!");
       return;
     }
 
-    // 🔴 DÜZELTME 1: b.bilet_no olarak kontrol ettik
-    const ayniBiletVarMi = biletler.some(
-      (b) => b.bilet_no == biletNo // Not: == kullandık çünkü biri string biri number olabilir
-    );
+    const veriPaketi = {
+      bilet_no: biletNo,
+      koltuk_no: koltukNo,
+      yolcu_id: secilenYolcuId,
+      ucus_id: secilenUcusId,
+    };
 
-    if (ayniBiletVarMi && duzenlenenBiletNo === null) {
-      alert("Bu bilet numarası zaten mevcut!");
-      return;
+    try {
+      let response;
+      
+      if (duzenlenenBiletNo === null) {
+        // ➕ YENİ EKLEME (POST)
+        response = await fetch("http://localhost:3000/api/bilet", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(veriPaketi)
+        });
+      } else {
+        // ✏️ GÜNCELLEME (PUT)
+        response = await fetch(`http://localhost:3000/api/bilet/${biletNo}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(veriPaketi)
+        });
+      }
+
+      if (response.ok) {
+        const sonucVerisi = await response.json();
+
+        if (duzenlenenBiletNo === null) {
+          // Listeye yeni ekle
+          setBiletler([...biletler, sonucVerisi]);
+          alert("✅ Bilet Veritabanına Kaydedildi!");
+        } else {
+          // Listede mevcut olanı güncelle
+          setBiletler(biletler.map(b => b.bilet_no === duzenlenenBiletNo ? sonucVerisi : b));
+          alert("✅ Bilet Güncellendi!");
+        }
+
+        // Temizlik
+        setBiletNo("");
+        setKoltukNo("");
+        setSecilenYolcuId("");
+        setSecilenUcusId("");
+        setDuzenlenenBiletNo(null);
+      } else {
+        alert("❌ İşlem başarısız! Bilet No çakışıyor olabilir.");
+      }
+    } catch (error) {
+      console.error("Hata:", error);
+      alert("Sunucu hatası.");
     }
-
-    if (duzenlenenBiletNo === null) {
-      // ➕ EKLEME (Veritabanı sütun isimlerini kullandık)
-      setBiletler((onceki) => [
-        ...onceki,
-        {
-          bilet_no: biletNo,          // biletNo -> bilet_no
-          koltuk_no: koltukNo,        // koltukNo -> koltuk_no
-          yolcu_id: secilenYolcuId,   // yolcuId -> yolcu_id
-          ucus_id: secilenUcusId,     // ucusId -> ucus_id
-        },
-      ]);
-    } else {
-      // ✏️ GÜNCELLEME
-      setBiletler((onceki) =>
-        onceki.map((b) =>
-          b.bilet_no === duzenlenenBiletNo
-            ? {
-                ...b,
-                koltuk_no: koltukNo,
-                yolcu_id: secilenYolcuId,
-                ucus_id: secilenUcusId,
-              }
-            : b
-        )
-      );
-    }
-
-    // Formu temizle
-    setBiletNo("");
-    setKoltukNo("");
-    setSecilenYolcuId("");
-    setSecilenUcusId("");
-    setDuzenlenenBiletNo(null);
   };
 
-  const sil = (no) => {
+  // 🔥 SİLME İŞLEMİ (DELETE)
+  const sil = async (no) => {
     if (!window.confirm("Bileti silmek istiyor musun?")) return;
-    // 🔴 DÜZELTME 2: bilet_no'ya göre sildik
-    setBiletler((onceki) => onceki.filter((b) => b.bilet_no !== no));
+
+    try {
+      await fetch(`http://localhost:3000/api/bilet/${no}`, { method: "DELETE" });
+      setBiletler(biletler.filter((b) => b.bilet_no !== no));
+    } catch (error) {
+      console.error("Silme hatası:", error);
+    }
   };
 
   const duzenle = (b) => {
-    // 🔴 DÜZELTME 3: Verileri çekerken doğru isimleri kullandık
     setDuzenlenenBiletNo(b.bilet_no);
     setBiletNo(b.bilet_no);
     setKoltukNo(b.koltuk_no);
@@ -80,9 +95,9 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
       className="page"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
     >
-      {/* 🎟️ BİLET FORMU */}
       <div className="card">
         <h2>Bilet Yönetimi</h2>
 
@@ -92,7 +107,7 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
             value={biletNo}
             onChange={(e) => setBiletNo(e.target.value)}
             className="form-group-full"
-            disabled={duzenlenenBiletNo !== null}
+            disabled={duzenlenenBiletNo !== null} // Düzenlerken ID değiştirilemez
           />
 
           <input
@@ -102,7 +117,6 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
             className="form-group-full"
           />
 
-          {/* ✈️ UÇUŞ SEÇİMİ */}
           <select
             value={secilenUcusId}
             onChange={(e) => setSecilenUcusId(Number(e.target.value))}
@@ -110,14 +124,12 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
           >
             <option value="">Uçuş Seç</option>
             {ucuslar.map((u) => (
-              /* 🔴 DÜZELTME 4: ucus_id ve kalkis/varis */
               <option key={u.ucus_id} value={u.ucus_id}>
                 {u.kalkis} → {u.varis} (ID: {u.ucus_id})
               </option>
             ))}
           </select>
 
-          {/* 👤 YOLCU SEÇİMİ */}
           <select
             value={secilenYolcuId}
             onChange={(e) => setSecilenYolcuId(Number(e.target.value))}
@@ -125,7 +137,6 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
           >
             <option value="">Yolcu Seç</option>
             {yolcular.map((y) => (
-              /* 🔴 DÜZELTME 5: yolcu_id ve yolcu_ad */
               <option key={y.yolcu_id} value={y.yolcu_id}>
                 {y.yolcu_ad} {y.yolcu_soyad}
               </option>
@@ -133,12 +144,11 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
           </select>
 
           <button className="primary" onClick={kaydet}>
-            {duzenlenenBiletNo === null ? "Ekle" : "Güncelle"}
+            {duzenlenenBiletNo === null ? "Veritabanına Kaydet" : "Güncelle"}
           </button>
         </div>
       </div>
 
-      {/* 📋 BİLET LİSTESİ */}
       <div className="card">
         <h3>Bilet Listesi</h3>
 
@@ -157,9 +167,8 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
             </thead>
             <tbody>
               {biletler.map((b) => {
-                // 🔴 DÜZELTME 6: Eşleştirme yaparken ID'lerin doğru yazımı
-                const yolcu = yolcular.find((y) => y.yolcu_id === b.yolcu_id);
-                const ucus = ucuslar.find((u) => u.ucus_id === b.ucus_id);
+                const yolcu = yolcular.find((y) => y.yolcu_id == b.yolcu_id);
+                const ucus = ucuslar.find((u) => u.ucus_id == b.ucus_id);
 
                 return (
                   <tr key={b.bilet_no}>
@@ -168,12 +177,12 @@ function Bilet({ yolcular, ucuslar, biletler, setBiletler }) {
                     <td>
                       {ucus
                         ? `${ucus.kalkis} → ${ucus.varis}`
-                        : `ID: ${b.ucus_id} (Bulunamadı)`}
+                        : `ID: ${b.ucus_id}`}
                     </td>
                     <td>
                       {yolcu
                         ? `${yolcu.yolcu_ad} ${yolcu.yolcu_soyad}`
-                        : `ID: ${b.yolcu_id} (Bulunamadı)`}
+                        : `ID: ${b.yolcu_id}`}
                     </td>
                     <td>
                       <button onClick={() => duzenle(b)}>Düzenle</button>

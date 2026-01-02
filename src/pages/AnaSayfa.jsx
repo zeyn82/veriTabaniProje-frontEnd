@@ -1,6 +1,15 @@
+import { motion } from "framer-motion";
+
 function AnaSayfa() {
   return (
-    <div className="page home-page">
+    <motion.div 
+      className="page home-page"
+      /* ✨ ANİMASYON AYARLARI ✨ */
+      initial={{ opacity: 0, y: 20 }}   // Hafif aşağıdan ve görünmez başlar
+      animate={{ opacity: 1, y: 0 }}    // Yukarı kayarak görünür olur
+      exit={{ opacity: 0, y: -20 }}     // Çıkarken yukarı doğru kaybolur
+      transition={{ duration: 0.6 }}    // Ana sayfa olduğu için biraz daha yavaş ve asil bir geçiş (0.6s)
+    >
       <div className="home-overlay" />
 
       <div className="card home-card">
@@ -20,9 +29,8 @@ function AnaSayfa() {
           <li>✔ Modern arayüz & Dark Mode</li>
         </ul>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 export default AnaSayfa;
-

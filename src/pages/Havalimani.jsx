@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 function Havalimani({ havalimanlari, setHavalimanlari }) {
   const [havalimaniId, setHavalimaniId] = useState("");
   const [havalimaniAdi, setHavalimaniAdi] = useState("");
   const [sehir, setSehir] = useState("");
 
-  const ekle = () => {
-    const id = havalimaniId.trim(); 
+  // 🔥 YENİ EKLE FONKSİYONU (VERİTABANI KAYITLI)
+  const ekle = async () => {
+    const id = havalimaniId.trim();
     const ad = havalimaniAdi.trim();
     const sehirAdi = sehir.trim();
 
@@ -15,91 +17,123 @@ function Havalimani({ havalimanlari, setHavalimanlari }) {
       return;
     }
 
-    // 🔴 DÜZELTME 1: Kontrol ederken veritabanı ismini kullandık (havalimani_id)
-    if (havalimanlari.some(h => h.havalimani_id === id)) {
-      alert("Bu Havalimanı ID zaten var.");
-      return;
+    try {
+      // 1. Backend'e Veriyi Gönder
+      const response = await fetch("http://localhost:3000/api/havalimani", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          havalimani_id: id,
+          havalimani_adi: ad.toUpperCase(),
+          sehir: sehirAdi.toUpperCase(),
+        })
+      });
+
+      if (response.ok) {
+        // 2. Başarılıysa Listeyi Güncelle
+        const yeniVeri = await response.json();
+        setHavalimanlari([...havalimanlari, yeniVeri]);
+
+        // 3. Formu Temizle
+        setHavalimaniId("");
+        setHavalimaniAdi("");
+        setSehir("");
+        alert("✅ Havalimanı Veritabanına Kaydedildi!");
+      } else {
+        alert("❌ Kayıt başarısız! ID çakışıyor olabilir.");
+      }
+    } catch (error) {
+      console.error("Hata:", error);
+      alert("Sunucu hatası.");
     }
-
-    // 🔴 DÜZELTME 2: Listeye eklerken de veritabanı formatına uygun ekledik
-    // (Not: Bu şimdilik sadece ekranda gösterir, veritabanına kaydetmek için fetch/POST gerekir)
-    setHavalimanlari([
-      ...havalimanlari,
-      {
-        havalimani_id: id,       // id yerine havalimani_id
-        havalimani_adi: ad.toUpperCase(), // ad yerine havalimani_adi
-        sehir: sehirAdi.toUpperCase(),
-      },
-    ]);
-
-    setHavalimaniId("");
-    setHavalimaniAdi("");
-    setSehir("");
   };
 
-  const sil = (id) => {
+  // 🔥 YENİ SİL FONKSİYONU (VERİTABANINDAN SİLER)
+  const sil = async (id) => {
     if (!window.confirm("Silmek istediğine emin misin?")) return;
-    // 🔴 DÜZELTME 3: Silerken doğru ID'ye göre filtreledik
-    setHavalimanlari(havalimanlari.filter(h => h.havalimani_id !== id));
+
+    try {
+      await fetch(`http://localhost:3000/api/havalimani/${id}`, { method: "DELETE" });
+      setHavalimanlari(havalimanlari.filter(h => h.havalimani_id !== id));
+    } catch (error) {
+      console.error("Silme hatası:", error);
+    }
   };
 
   return (
-    <div className="page">
+    <motion.div 
+      className="page"
+      /* ✨ ANİMASYON AYARLARI ✨ */
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="card">
         <h2>Havalimanı Yönetimi</h2>
 
-        <input
-          type="text"
-          placeholder="Havalimanı ID (IST)"
-          value={havalimaniId}
-          onChange={(e) => setHavalimaniId(e.target.value)}
-        />
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Havalimanı ID (IST)"
+            value={havalimaniId}
+            onChange={(e) => setHavalimaniId(e.target.value)}
+            className="form-group-full"
+          />
 
-        <input
-          placeholder="Havalimanı Adı"
-          value={havalimaniAdi}
-          onChange={(e) => setHavalimaniAdi(e.target.value)}
-        />
+          <input
+            placeholder="Havalimanı Adı"
+            value={havalimaniAdi}
+            onChange={(e) => setHavalimaniAdi(e.target.value)}
+            className="form-group-full"
+          />
 
-        <input
-          placeholder="Şehir"
-          value={sehir}
-          onChange={(e) => setSehir(e.target.value)}
-        />
+          <input
+            placeholder="Şehir"
+            value={sehir}
+            onChange={(e) => setSehir(e.target.value)}
+            className="form-group-full"
+          />
 
-        <button onClick={ekle}>Ekle</button>
+          {/* 🔥 YEŞİL BUTON: className="primary" eklendi */}
+          <button className="primary" onClick={ekle}>Veritabanına Kaydet</button>
+        </div>
       </div>
 
       <div className="card">
         <h3>Havalimanı Listesi</h3>
 
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Ad</th>
-              <th>Şehir</th>
-              <th>İşlem</th>
-            </tr>
-          </thead>
-          <tbody>
-            {havalimanlari.map(h => (
-              /* 🔴 DÜZELTME 4: Veritabanı sütun isimlerini buraya yazdık */
-              <tr key={h.havalimani_id}>
-                <td>{h.havalimani_id}</td>  {/* h.id yerine */}
-                <td>{h.havalimani_adi}</td> {/* h.ad yerine */}
-                <td>{h.sehir}</td>          {/* Bu zaten doğruydu */}
-                <td>
-                  <button className="danger" onClick={() => sil(h.havalimani_id)}>
-                    Sil
-                  </button>
-                </td>
+        {havalimanlari.length === 0 ? (
+          <p>Kayıtlı havalimanı bulunamadı.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Ad</th>
+                <th>Şehir</th>
+                <th>İşlem</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {havalimanlari.map(h => (
+                <tr key={h.havalimani_id}>
+                  {/* Veritabanı sütun isimleri */}
+                  <td>{h.havalimani_id}</td>
+                  <td>{h.havalimani_adi}</td>
+                  <td>{h.sehir}</td>
+                  <td>
+                    <button className="danger" onClick={() => sil(h.havalimani_id)}>
+                      Sil
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

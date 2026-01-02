@@ -6,46 +6,64 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
   const [agirlik, setAgirlik] = useState("");
   const [yolcuId, setYolcuId] = useState("");
 
-  const ekle = () => {
+  // 🔥 YENİ EKLE FONKSİYONU (VERİTABANI KAYITLI)
+  const ekle = async () => {
     if (!bagajNo || !agirlik || !yolcuId) {
       alert("Lütfen tüm alanları doldurun.");
       return;
     }
 
-    // 🔴 DÜZELTME 1: Veritabanındaki isimle kontrol (bagaj_no)
-    // Not: bagaj_no veritabanından sayı veya string gelebilir, '==' kullandık.
-    if (bagajlar.some(b => b.bagaj_no == bagajNo)) {
-      alert("Bu bagaj numarası zaten var!");
-      return;
+    try {
+      // 1. Backend'e Veriyi Gönder
+      const response = await fetch("http://localhost:3000/api/bagaj", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bagaj_no: bagajNo,
+          agirlik: agirlik,
+          yolcu_id: yolcuId,
+        })
+      });
+
+      if (response.ok) {
+        // 2. Başarılıysa Listeyi Güncelle
+        const yeniVeri = await response.json();
+        setBagajlar([...bagajlar, yeniVeri]);
+
+        // 3. Formu Temizle
+        setBagajNo("");
+        setAgirlik("");
+        setYolcuId("");
+        alert("✅ Bagaj Veritabanına Kaydedildi!");
+      } else {
+        alert("❌ Kayıt başarısız! Bagaj No çakışıyor olabilir.");
+      }
+    } catch (error) {
+      console.error("Hata:", error);
+      alert("Sunucu hatası.");
     }
-
-    // 🔴 DÜZELTME 2: Listeye eklerken veritabanı formatını kullandık
-    setBagajlar([
-      ...bagajlar,
-      {
-        bagaj_no: bagajNo, // bagajNo -> bagaj_no
-        agirlik: agirlik,
-        yolcu_id: yolcuId,
-      },
-    ]);
-
-    setBagajNo("");
-    setAgirlik("");
-    setYolcuId("");
   };
 
-  const sil = (no) => {
+  // 🔥 YENİ SİL FONKSİYONU (VERİTABANINDAN SİLER)
+  const sil = async (no) => {
     if (!window.confirm("Silmek istiyor musun?")) return;
-    // 🔴 DÜZELTME 3: Silerken bagaj_no kullandık
-    setBagajlar(bagajlar.filter(b => b.bagaj_no !== no));
+
+    try {
+      await fetch(`http://localhost:3000/api/bagaj/${no}`, { method: "DELETE" });
+      setBagajlar(bagajlar.filter(b => b.bagaj_no !== no));
+    } catch (error) {
+      console.error("Silme hatası:", error);
+    }
   };
 
   return (
     <motion.div 
       className="page"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      /* ✨ ANİMASYON AYARLARI ✨ */
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
     >
       <div className="card">
         <h2>Bagaj Yönetimi</h2>
@@ -79,7 +97,8 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
             ))}
           </select>
 
-          <button onClick={ekle}>Ekle</button>
+          {/* 🔥 YEŞİL BUTON: className="primary" eklendi */}
+          <button className="primary" onClick={ekle}>Veritabanına Kaydet</button>
         </div>
       </div>
 
@@ -104,9 +123,7 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
                 const y = yolcular.find(y => y.yolcu_id == b.yolcu_id);
                 
                 return (
-                  // 🔴 DÜZELTME 4: key olarak bagaj_no kullandık
                   <tr key={b.bagaj_no}>
-                    {/* 🔴 DÜZELTME 5: Ekrana yazarken bagaj_no kullandık */}
                     <td>{b.bagaj_no}</td>
                     <td>{b.agirlik} kg</td>
                     <td>

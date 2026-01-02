@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 function Ucus({ 
   ucuslar, setUcuslar, 
@@ -12,45 +13,92 @@ function Ucus({
   const [kalkisYerId, setKalkisYerId] = useState("");
   const [varisYerId, setVarisYerId] = useState("");
 
-  const ekle = () => {
+  // 🔥 YENİ EKLE FONKSİYONU (VERİTABANI KAYITLI)
+  const ekle = async () => {
     if (!ucusId || !kalkis || !varis || !ucakId || !havayoluId || !kalkisYerId || !varisYerId) {
       alert("Lütfen tüm alanları doldurun!");
       return;
     }
 
-    // Arayüzde anında göstermek için geçici objeyi oluşturuyoruz
-    const yeniUcus = {
-      ucus_id: ucusId,
-      kalkis: kalkis,
-      varis: varis,
-      
-      // İsimleri listeden bulup elle ekliyoruz ki sayfa yenilenmeden görünsün
-      havayolu_adi: havayollari.find(h => h.havayolu_id === havayoluId)?.havayolu_adi || havayoluId,
-      ucak_model: ucaklar.find(u => u.ucak_id === ucakId)?.model || ucakId,
-      kalkis_yeri: havalimanlari.find(h => h.havalimani_id === kalkisYerId)?.havalimani_adi || kalkisYerId,
-      varis_yeri: havalimanlari.find(h => h.havalimani_id === varisYerId)?.havalimani_adi || varisYerId
-    };
+    try {
+      // 1. Backend'e Veriyi Gönder
+      const response = await fetch("http://localhost:3000/api/ucus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ucus_id: ucusId,
+          kalkis: kalkis,
+          varis: varis,
+          ucak_id: ucakId,
+          havayolu_id: havayoluId,
+          kalkishavalimani_id: kalkisYerId,
+          varishavalimani_id: varisYerId
+        })
+      });
 
-    setUcuslar([...ucuslar, yeniUcus]);
-    // Not: Burada ayrıca Backend'e POST isteği atılması gerekir (fetch)
+      if (response.ok) {
+        // 2. Başarılıysa Backend'den gelen veriyi al (Sadece ID'ler gelir)
+        // const kayitliVeri = await response.json(); // İstersen bunu kullanabilirsin ama aşağıda elle oluşturuyoruz
 
-    // Formu temizle
-    setUcusId("");
-    setKalkis("");
-    setVaris("");
-    setUcakId("");
-    setHavayoluId("");
-    setKalkisYerId("");
-    setVarisYerId("");
+        // 3. Ekranda İSİMLERİ göstermek için eşleştirme yapıyoruz
+        // (Çünkü veritabanı bize 'Türk Hava Yolları' yazısını dönmez, sadece 'THY' kodunu döner)
+        const yeniUcus = {
+          ucus_id: ucusId,
+          kalkis: kalkis,
+          varis: varis,
+          havayolu_id: havayoluId,
+          ucak_id: ucakId,
+          kalkishavalimani_id: kalkisYerId,
+          varishavalimani_id: varisYerId,
+          
+          // Listeden isimleri bulup ekliyoruz:
+          havayolu_adi: havayollari.find(h => h.havayolu_id === havayoluId)?.havayolu_adi || havayoluId,
+          ucak_model: ucaklar.find(u => u.ucak_id === ucakId)?.model || ucakId,
+          kalkis_yeri: havalimanlari.find(h => h.havalimani_id === kalkisYerId)?.havalimani_adi || kalkisYerId,
+          varis_yeri: havalimanlari.find(h => h.havalimani_id === varisYerId)?.havalimani_adi || varisYerId
+        };
+
+        setUcuslar([...ucuslar, yeniUcus]);
+
+        // 4. Formu Temizle
+        setUcusId("");
+        setKalkis("");
+        setVaris("");
+        setUcakId("");
+        setHavayoluId("");
+        setKalkisYerId("");
+        setVarisYerId("");
+        alert("✅ Uçuş Veritabanına Kaydedildi!");
+      } else {
+        alert("❌ Kayıt başarısız! ID çakışıyor olabilir.");
+      }
+    } catch (error) {
+      console.error("Hata:", error);
+      alert("Sunucu hatası.");
+    }
   };
 
-  const sil = (id) => {
+  // 🔥 YENİ SİL FONKSİYONU
+  const sil = async (id) => {
     if (!window.confirm("Uçuşu silmek istiyor musun?")) return;
-    setUcuslar(ucuslar.filter(u => u.ucus_id !== id));
+
+    try {
+      await fetch(`http://localhost:3000/api/ucus/${id}`, { method: "DELETE" });
+      setUcuslar(ucuslar.filter(u => u.ucus_id !== id));
+    } catch (error) {
+      console.error("Silme hatası:", error);
+    }
   };
 
   return (
-    <div className="page">
+    <motion.div 
+      className="page"
+      /* ✨ ANİMASYON AYARLARI ✨ */
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="card">
         <h2>Uçuş Yönetimi</h2>
 
@@ -132,7 +180,7 @@ function Ucus({
              </div>
           </div>
 
-          <button className="primary" onClick={ekle} style={{marginTop:'10px'}}>Ekle</button>
+          <button className="primary" onClick={ekle} style={{marginTop:'10px'}}>Veritabanına Kaydet</button>
         </div>
       </div>
 
@@ -184,7 +232,7 @@ function Ucus({
           </table>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

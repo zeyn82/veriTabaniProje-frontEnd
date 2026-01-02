@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 function Havayolu({ havayollari, setHavayollari }) {
   const [havayoluId, setHavayoluId] = useState("");
   const [havayoluAdi, setHavayoluAdi] = useState("");
 
-  const ekle = () => {
+  // 🔥 YENİ EKLE FONKSİYONU (VERİTABANI KAYITLI)
+  const ekle = async () => {
     const id = havayoluId.trim();
     const ad = havayoluAdi.trim();
 
@@ -13,80 +15,112 @@ function Havayolu({ havayollari, setHavayollari }) {
       return;
     }
 
-    // 🔴 DÜZELTME 1: Kontrol ederken veritabanı ismini kullandık (havayolu_id)
-    if (havayollari.some(h => h.havayolu_id === id)) {
-      alert("Bu havayolu ID zaten var.");
-      return;
+    try {
+      // 1. Backend'e Veriyi Gönder
+      const response = await fetch("http://localhost:3000/api/havayolu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          havayolu_id: id,
+          havayolu_adi: ad.toUpperCase()
+        })
+      });
+
+      if (response.ok) {
+        // 2. Başarılıysa Listeyi Güncelle
+        const yeniVeri = await response.json();
+        setHavayollari([...havayollari, yeniVeri]);
+
+        // 3. Formu Temizle
+        setHavayoluId("");
+        setHavayoluAdi("");
+        alert("✅ Havayolu Veritabanına Kaydedildi!");
+      } else {
+        alert("❌ Kayıt başarısız! ID çakışıyor olabilir.");
+      }
+    } catch (error) {
+      console.error("Hata:", error);
+      alert("Sunucu hatası.");
     }
-
-    // 🔴 DÜZELTME 2: Listeye eklerken veritabanı formatını kullandık
-    setHavayollari([
-      ...havayollari,
-      { 
-        havayolu_id: id,             // id -> havayolu_id
-        havayolu_adi: ad.toUpperCase() // ad -> havayolu_adi
-      },
-    ]);
-
-    setHavayoluId("");
-    setHavayoluAdi("");
   };
 
-  const sil = (id) => {
+  // 🔥 YENİ SİL FONKSİYONU (VERİTABANINDAN SİLER)
+  const sil = async (id) => {
     if (!window.confirm("Silmek istiyor musun?")) return;
-    // 🔴 DÜZELTME 3: Silerken doğru ID'yi kullandık
-    setHavayollari(havayollari.filter(h => h.havayolu_id !== id));
+
+    try {
+      await fetch(`http://localhost:3000/api/havayolu/${id}`, { method: "DELETE" });
+      setHavayollari(havayollari.filter(h => h.havayolu_id !== id));
+    } catch (error) {
+      console.error("Silme hatası:", error);
+    }
   };
 
   return (
-    <div className="page">
+    <motion.div 
+      className="page"
+      /* ✨ ANİMASYON AYARLARI ✨ */
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="card">
         <h2>Havayolu Yönetimi</h2>
 
-        <input
-          type="text"
-          placeholder="Havayolu ID (THY)"
-          value={havayoluId}
-          onChange={(e) => setHavayoluId(e.target.value)}
-        />
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Havayolu ID (THY)"
+            value={havayoluId}
+            onChange={(e) => setHavayoluId(e.target.value)}
+            className="form-group-full"
+          />
 
-        <input
-          placeholder="Havayolu Adı"
-          value={havayoluAdi}
-          onChange={(e) => setHavayoluAdi(e.target.value)}
-        />
+          <input
+            placeholder="Havayolu Adı"
+            value={havayoluAdi}
+            onChange={(e) => setHavayoluAdi(e.target.value)}
+            className="form-group-full"
+          />
 
-        <button onClick={ekle}>Ekle</button>
+          {/* 🔥 YEŞİL BUTON: className="primary" eklendi */}
+          <button className="primary" onClick={ekle}>Veritabanına Kaydet</button>
+        </div>
       </div>
 
       <div className="card">
         <h3>Havayolu Listesi</h3>
 
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Ad</th>
-              <th>İşlem</th>
-            </tr>
-          </thead>
-          <tbody>
-            {havayollari.map(h => (
-              /* 🔴 DÜZELTME 4: Veritabanı sütun isimlerini buraya yazdık */
-              <tr key={h.havayolu_id}>
-                <td>{h.havayolu_id}</td>   {/* h.id yerine */}
-                <td>{h.havayolu_adi}</td>  {/* h.ad yerine */}
-                <td>
-                  <button className="danger" onClick={() => sil(h.havayolu_id)}>
-                    Sil
-                  </button>
-                </td>
+        {havayollari.length === 0 ? (
+          <p>Kayıtlı havayolu bulunamadı.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Ad</th>
+                <th>İşlem</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {havayollari.map(h => (
+                <tr key={h.havayolu_id}>
+                  {/* Veritabanı sütun isimleri */}
+                  <td>{h.havayolu_id}</td>
+                  <td>{h.havayolu_adi}</td>
+                  <td>
+                    <button className="danger" onClick={() => sil(h.havayolu_id)}>
+                      Sil
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

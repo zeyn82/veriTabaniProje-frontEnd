@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 function Pilot({ personeller }) {
   // Backend'den gelen 'rol' bilgisine göre filtreleme yapıyoruz.
@@ -6,7 +7,14 @@ function Pilot({ personeller }) {
   const pilotlar = personeller.filter(p => p.rol === "Pilot");
 
   return (
-    <div className="page">
+    <motion.div 
+      className="page"
+      /* ✨ ANİMASYON AYARLARI ✨ */
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="card">
         <h2>Pilot Listesi</h2>
 
@@ -26,16 +34,16 @@ function Pilot({ personeller }) {
                 <tr key={p.personel_id}>
                   <td>{p.personel_id}</td>
                   
-                  {/* 🔴 DÜZELTME: Veritabanı sütun isimlerini kullandık */}
-                  <td>{p.personel_ad}</td>   {/* p.ad yerine */}
-                  <td>{p.personel_soyad}</td> {/* p.soyad yerine */}
+                  {/* Veritabanı sütun isimleri */}
+                  <td>{p.personel_ad}</td> 
+                  <td>{p.personel_soyad}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
