@@ -5,7 +5,8 @@ import {
   Route,
   Link,
   useLocation,
-  useNavigate // Yönlendirme için eklendi (Opsiyonel kullanım)
+  useNavigate,
+  Navigate
 } from "react-router-dom";
 
 import AnaSayfa from "./pages/AnaSayfa";
@@ -60,18 +61,30 @@ function SayfaBasligi() {
 
 function App() {
   const [menuAcik, setMenuAcik] = useState(false);
-  const [dark, setDark] = useState(false);
-
-  // 🔥🔥🔥 YENİ: Giriş Durumu Kontrolü (Varsayılan: false/giriş yapılmadı) 🔥🔥🔥
   const [girisYapildi, setGirisYapildi] = useState(false);
 
-  /* 🌙 DARK MODE AYARI */
+  // 🔥🔥🔥 DÜZELTME BAŞLANGICI: LOCALSTORAGE KULLANIMI 🔥🔥🔥
+  
+  // 1. Başlangıç değerini Tarayıcı Hafızasından okuyoruz
+  const [dark, setDark] = useState(() => {
+    const kayitliTema = localStorage.getItem("tema");
+    return kayitliTema === "koyu"; // Eğer 'koyu' kayıtlıysa true döner
+  });
+
+  /* 🌙 DARK MODE AYARI VE KAYDI */
   useEffect(() => {
-    if (dark) document.body.classList.add("dark");
-    else document.body.classList.remove("dark");
+    if (dark) {
+      document.body.classList.add("dark");
+      localStorage.setItem("tema", "koyu"); // Hafızaya yaz
+    } else {
+      document.body.classList.remove("dark");
+      localStorage.setItem("tema", "acik"); // Hafızaya yaz
+    }
   }, [dark]);
 
-  /* 📦 STATE’LER (Verilerin Saklandığı Kutular) */
+  // 🔥🔥🔥 DÜZELTME BİTİŞİ 🔥🔥🔥
+
+  /* 📦 STATE’LER */
   const [havalimanlari, setHavalimanlari] = useState([]);
   const [havayollari, setHavayollari] = useState([]);
   const [ucaklar, setUcaklar] = useState([]);
@@ -81,49 +94,39 @@ function App() {
   const [bagajlar, setBagajlar] = useState([]);
   const [personeller, setPersoneller] = useState([]);
 
-  /* 🔥🔥🔥 TÜM VERİLERİ BACKEND'DEN ÇEKME 🔥🔥🔥 */
+  /* 🔥 VERİ ÇEKME */
   useEffect(() => {
     const verileriGetir = async () => {
       try {
         console.log("📡 Tüm veriler Backend'den isteniyor...");
-
-        // 1. Yolcular
         const yolcuCevap = await fetch("http://localhost:3000/api/yolcu");
         if (yolcuCevap.ok) setYolcular(await yolcuCevap.json());
 
-        // 2. Uçuşlar
         const ucusCevap = await fetch("http://localhost:3000/api/ucus");
         if (ucusCevap.ok) setUcuslar(await ucusCevap.json());
 
-        // 3. Biletler
         const biletCevap = await fetch("http://localhost:3000/api/bilet");
         if (biletCevap.ok) setBiletler(await biletCevap.json());
 
-        // 4. Havalimanları
         const havalimaniCevap = await fetch("http://localhost:3000/api/havalimani");
         if (havalimaniCevap.ok) setHavalimanlari(await havalimaniCevap.json());
 
-        // 5. Havayolları
         const havayoluCevap = await fetch("http://localhost:3000/api/havayolu");
         if (havayoluCevap.ok) setHavayollari(await havayoluCevap.json());
 
-        // 6. Uçaklar
         const ucakCevap = await fetch("http://localhost:3000/api/ucak");
         if (ucakCevap.ok) setUcaklar(await ucakCevap.json());
 
-        // 7. Personeller
         const personelCevap = await fetch("http://localhost:3000/api/personel");
         if (personelCevap.ok) setPersoneller(await personelCevap.json());
         
-        // 8. Bagajlar
         const bagajCevap = await fetch("http://localhost:3000/api/bagaj");
         if (bagajCevap.ok) setBagajlar(await bagajCevap.json());
 
       } catch (error) {
-        console.error("❌ Veri çekme hatası (Sunucu kapalı veya rota yok):", error);
+        console.error("❌ Veri çekme hatası:", error);
       }
     };
-
     verileriGetir();
   }, []); 
 
@@ -142,11 +145,12 @@ function App() {
     { path: "/kabin", label: "Kabin" },
   ];
 
-  // 🔥 ÇIKIŞ YAPMA FONKSİYONU
   const cikisYap = () => {
     if (window.confirm("Hesaptan çıkış yapmak istiyor musunuz?")) {
-      setGirisYapildi(false); // Durumu sıfırla
-      window.location.href = "/"; // Ana sayfaya (Login ekranına) yönlendir
+      setGirisYapildi(false);
+      // Not: window.location.href tüm sayfayı yenilediği için localStorage kullanmazsak state sıfırlanır.
+      // Artık localStorage kullandığımız için renk tercihi kalıcı olur.
+      window.location.href = "/"; 
     }
   };
 
@@ -166,24 +170,26 @@ function App() {
           zIndex: 50,
         }}
       >
-        <button
-          onClick={() => setMenuAcik(true)}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "1.5rem",
-            color: "var(--text-color)",
-          }}
-        >
-          ☰
-        </button>
+        {/* 🔥 GÜVENLİK 1: Giriş yapılmadıysa Menü Butonu GİZLENİR */}
+        {girisYapildi ? (
+          <button
+            onClick={() => setMenuAcik(true)}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "1.5rem",
+              color: "var(--text-color)",
+            }}
+          >
+            ☰
+          </button>
+        ) : (
+          <div style={{ width: '24px' }}></div> 
+        )}
 
         <SayfaBasligi />
 
-        {/* SAĞ TARAF: ÇIKIŞ BUTONU ve DARK MODE */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          
-          {/* 🔥 Eğer giriş yapıldıysa ÇIKIŞ butonu görünsün */}
           {girisYapildi && (
             <button 
               className="danger" 
@@ -205,9 +211,8 @@ function App() {
 
       {/* 🔹 MENÜ (Animasyonlu) */}
       <AnimatePresence>
-        {menuAcik && (
+        {menuAcik && girisYapildi && (
           <>
-            {/* Arka plan karartması */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
@@ -221,7 +226,6 @@ function App() {
               }}
             />
 
-            {/* Yan Menü Paneli */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
@@ -270,7 +274,6 @@ function App() {
       {/* 🔹 SAYFALAR VE ROTALAR */}
       <div style={{ padding: "20px" }}>
         <Routes>
-          {/* 🔥 ANA SAYFAYA PROP GÖNDERİYORUZ */}
           <Route 
             path="/" 
             element={
@@ -281,52 +284,58 @@ function App() {
             } 
           />
 
-          <Route path="/havalimani" element={<Havalimani havalimanlari={havalimanlari} setHavalimanlari={setHavalimanlari} />} />
-          <Route path="/havayolu" element={<Havayolu havayollari={havayollari} setHavayollari={setHavayollari} />} />
-          <Route path="/yolcu" element={<Yolcu yolcular={yolcular} setYolcular={setYolcular} />} />
+          <Route path="/havalimani" element={girisYapildi ? <Havalimani havalimanlari={havalimanlari} setHavalimanlari={setHavalimanlari} /> : <Navigate to="/" />} />
+          <Route path="/havayolu" element={girisYapildi ? <Havayolu havayollari={havayollari} setHavayollari={setHavayollari} /> : <Navigate to="/" />} />
+          <Route path="/yolcu" element={girisYapildi ? <Yolcu yolcular={yolcular} setYolcular={setYolcular} /> : <Navigate to="/" />} />
 
           <Route
             path="/bilet"
             element={
-              <Bilet
-                yolcular={yolcular}
-                ucuslar={ucuslar}
-                biletler={biletler}
-                setBiletler={setBiletler}
-              />
+              girisYapildi ? (
+                <Bilet
+                  yolcular={yolcular}
+                  ucuslar={ucuslar}
+                  biletler={biletler}
+                  setBiletler={setBiletler}
+                />
+              ) : <Navigate to="/" />
             }
           />
 
           <Route
             path="/ucus"
             element={
-              <Ucus
-                havalimanlari={havalimanlari}
-                havayollari={havayollari}
-                ucaklar={ucaklar}
-                biletler={biletler}
-                ucuslar={ucuslar}
-                setUcuslar={setUcuslar}
-              />
+              girisYapildi ? (
+                <Ucus
+                  havalimanlari={havalimanlari}
+                  havayollari={havayollari}
+                  ucaklar={ucaklar}
+                  biletler={biletler}
+                  ucuslar={ucuslar}
+                  setUcuslar={setUcuslar}
+                />
+              ) : <Navigate to="/" />
             }
           />
 
-          <Route path="/bagaj" element={<Bagaj yolcular={yolcular} bagajlar={bagajlar} setBagajlar={setBagajlar} />} />
+          <Route path="/bagaj" element={girisYapildi ? <Bagaj yolcular={yolcular} bagajlar={bagajlar} setBagajlar={setBagajlar} /> : <Navigate to="/" />} />
           
           <Route 
              path="/ucak" 
              element={
-                <Ucak 
-                   ucaklar={ucaklar} 
-                   setUcaklar={setUcaklar} 
-                   havayollari={havayollari} 
-                />
+                girisYapildi ? (
+                  <Ucak 
+                     ucaklar={ucaklar} 
+                     setUcaklar={setUcaklar} 
+                     havayollari={havayollari} 
+                  />
+                ) : <Navigate to="/" />
              } 
           />
 
-          <Route path="/personel" element={<Personel personeller={personeller} setPersoneller={setPersoneller} />} />
-          <Route path="/pilot" element={<Pilot personeller={personeller} />} />
-          <Route path="/kabin" element={<Kabin personeller={personeller} />} />
+          <Route path="/personel" element={girisYapildi ? <Personel personeller={personeller} setPersoneller={setPersoneller} /> : <Navigate to="/" />} />
+          <Route path="/pilot" element={girisYapildi ? <Pilot personeller={personeller} /> : <Navigate to="/" />} />
+          <Route path="/kabin" element={girisYapildi ? <Kabin personeller={personeller} /> : <Navigate to="/" />} />
         </Routes>
       </div>
     </BrowserRouter>
