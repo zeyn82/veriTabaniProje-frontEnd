@@ -5,6 +5,7 @@ import {
   Route,
   Link,
   useLocation,
+  useNavigate // Yönlendirme için eklendi (Opsiyonel kullanım)
 } from "react-router-dom";
 
 import AnaSayfa from "./pages/AnaSayfa";
@@ -60,6 +61,9 @@ function SayfaBasligi() {
 function App() {
   const [menuAcik, setMenuAcik] = useState(false);
   const [dark, setDark] = useState(false);
+
+  // 🔥🔥🔥 YENİ: Giriş Durumu Kontrolü (Varsayılan: false/giriş yapılmadı) 🔥🔥🔥
+  const [girisYapildi, setGirisYapildi] = useState(false);
 
   /* 🌙 DARK MODE AYARI */
   useEffect(() => {
@@ -138,6 +142,14 @@ function App() {
     { path: "/kabin", label: "Kabin" },
   ];
 
+  // 🔥 ÇIKIŞ YAPMA FONKSİYONU
+  const cikisYap = () => {
+    if (window.confirm("Hesaptan çıkış yapmak istiyor musunuz?")) {
+      setGirisYapildi(false); // Durumu sıfırla
+      window.location.href = "/"; // Ana sayfaya (Login ekranına) yönlendir
+    }
+  };
+
   return (
     <BrowserRouter>
       {/* 🔹 NAVBAR */}
@@ -168,11 +180,26 @@ function App() {
 
         <SayfaBasligi />
 
-        <div
-          className="toggle-switch"
-          onClick={() => setDark(!dark)}
-        >
-          <div className="toggle-circle" />
+        {/* SAĞ TARAF: ÇIKIŞ BUTONU ve DARK MODE */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          
+          {/* 🔥 Eğer giriş yapıldıysa ÇIKIŞ butonu görünsün */}
+          {girisYapildi && (
+            <button 
+              className="danger" 
+              onClick={cikisYap}
+              style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+            >
+              Çıkış
+            </button>
+          )}
+
+          <div
+            className="toggle-switch"
+            onClick={() => setDark(!dark)}
+          >
+            <div className="toggle-circle" />
+          </div>
         </div>
       </nav>
 
@@ -243,7 +270,16 @@ function App() {
       {/* 🔹 SAYFALAR VE ROTALAR */}
       <div style={{ padding: "20px" }}>
         <Routes>
-          <Route path="/" element={<AnaSayfa />} />
+          {/* 🔥 ANA SAYFAYA PROP GÖNDERİYORUZ */}
+          <Route 
+            path="/" 
+            element={
+              <AnaSayfa 
+                girisYapildi={girisYapildi} 
+                setGirisYapildi={setGirisYapildi} 
+              />
+            } 
+          />
 
           <Route path="/havalimani" element={<Havalimani havalimanlari={havalimanlari} setHavalimanlari={setHavalimanlari} />} />
           <Route path="/havayolu" element={<Havayolu havayollari={havayollari} setHavayollari={setHavayollari} />} />
@@ -277,7 +313,6 @@ function App() {
 
           <Route path="/bagaj" element={<Bagaj yolcular={yolcular} bagajlar={bagajlar} setBagajlar={setBagajlar} />} />
           
-          {/* 🔥🔥🔥 DÜZELTİLEN KISIM: havayollari props olarak eklendi! 🔥🔥🔥 */}
           <Route 
              path="/ucak" 
              element={
