@@ -4,9 +4,12 @@ import { motion } from "framer-motion";
 function Havayolu({ havayollari, setHavayollari }) {
   const [havayoluId, setHavayoluId] = useState("");
   const [havayoluAdi, setHavayoluAdi] = useState("");
+  
+  // 🔥 Düzenleme Modu için State
+  const [duzenlenenId, setDuzenlenenId] = useState(null);
 
-  // 🔥 YENİ EKLE FONKSİYONU (VERİTABANI KAYITLI)
-  const ekle = async () => {
+  // 🔥 KAYDET (HEM EKLEME HEM GÜNCELLEME)
+  const kaydet = async () => {
     const id = havayoluId.trim();
     const ad = havayoluAdi.trim();
 
@@ -16,27 +19,48 @@ function Havayolu({ havayollari, setHavayollari }) {
     }
 
     try {
-      // 1. Backend'e Veriyi Gönder
-      const response = await fetch("http://localhost:3000/api/havayolu", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          havayolu_id: id,
-          havayolu_adi: ad.toUpperCase()
-        })
-      });
+      let response;
+      
+      if (duzenlenenId) {
+        // 🔄 GÜNCELLEME (PUT)
+        response = await fetch(`http://localhost:3000/api/havayolu/${duzenlenenId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            havayolu_adi: ad.toUpperCase()
+          })
+        });
+      } else {
+        // ➕ EKLEME (POST)
+        response = await fetch("http://localhost:3000/api/havayolu", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            havayolu_id: id,
+            havayolu_adi: ad.toUpperCase()
+          })
+        });
+      }
 
       if (response.ok) {
-        // 2. Başarılıysa Listeyi Güncelle
-        const yeniVeri = await response.json();
-        setHavayollari([...havayollari, yeniVeri]);
+        const sonucVerisi = await response.json();
 
-        // 3. Formu Temizle
+        if (duzenlenenId) {
+          // Listeyi güncelle
+          setHavayollari(havayollari.map(h => h.havayolu_id === duzenlenenId ? sonucVerisi : h));
+          alert("✅ Havayolu Güncellendi!");
+        } else {
+          // Listeye yeni ekle
+          setHavayollari([...havayollari, sonucVerisi]);
+          alert("✅ Havayolu Kaydedildi!");
+        }
+
+        // Formu ve Modu Sıfırla
         setHavayoluId("");
         setHavayoluAdi("");
-        alert("✅ Havayolu Veritabanına Kaydedildi!");
+        setDuzenlenenId(null);
       } else {
-        alert("❌ Kayıt başarısız! ID çakışıyor olabilir.");
+        alert("❌ İşlem başarısız! ID çakışıyor olabilir.");
       }
     } catch (error) {
       console.error("Hata:", error);
@@ -44,7 +68,14 @@ function Havayolu({ havayollari, setHavayollari }) {
     }
   };
 
-  // 🔥 YENİ SİL FONKSİYONU (VERİTABANINDAN SİLER)
+  // 🔥 DÜZENLEME MODUNU AÇAR
+  const duzenle = (h) => {
+    setDuzenlenenId(h.havayolu_id);
+    setHavayoluId(h.havayolu_id);
+    setHavayoluAdi(h.havayolu_adi);
+  };
+
+  // 🔥 SİLME İŞLEMİ
   const sil = async (id) => {
     if (!window.confirm("Silmek istiyor musun?")) return;
 
@@ -59,7 +90,6 @@ function Havayolu({ havayollari, setHavayollari }) {
   return (
     <motion.div 
       className="page"
-      /* ✨ ANİMASYON AYARLARI ✨ */
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -75,6 +105,7 @@ function Havayolu({ havayollari, setHavayollari }) {
             value={havayoluId}
             onChange={(e) => setHavayoluId(e.target.value)}
             className="form-group-full"
+            disabled={duzenlenenId !== null} // Düzenlerken ID değiştirilemez
           />
 
           <input
@@ -84,8 +115,20 @@ function Havayolu({ havayollari, setHavayollari }) {
             className="form-group-full"
           />
 
-          {/* 🔥 YEŞİL BUTON: className="primary" eklendi */}
-          <button className="primary" onClick={ekle}>Veritabanına Kaydet</button>
+          {/* 🔥 BUTONLAR */}
+          <button className="primary" onClick={kaydet}>
+            {duzenlenenId ? "Güncelle" : "Veritabanına Kaydet"}
+          </button>
+
+          {duzenlenenId && (
+            <button onClick={() => {
+              setDuzenlenenId(null);
+              setHavayoluId("");
+              setHavayoluAdi("");
+            }}>
+              İptal
+            </button>
+          )}
         </div>
       </div>
 
@@ -106,11 +149,15 @@ function Havayolu({ havayollari, setHavayollari }) {
             <tbody>
               {havayollari.map(h => (
                 <tr key={h.havayolu_id}>
-                  {/* Veritabanı sütun isimleri */}
                   <td>{h.havayolu_id}</td>
                   <td>{h.havayolu_adi}</td>
                   <td>
-                    <button className="danger" onClick={() => sil(h.havayolu_id)}>
+                    <button onClick={() => duzenle(h)}>Düzenle</button>
+                    <button 
+                      className="danger" 
+                      onClick={() => sil(h.havayolu_id)}
+                      style={{ marginLeft: "5px" }}
+                    >
                       Sil
                     </button>
                   </td>

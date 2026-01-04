@@ -2,10 +2,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// 1. LİSTELE
+// 1. LİSTELE (GET)
 router.get('/', async (req, res) => {
   try {
-    // Uçakları getirirken Havayolu ismini de (JOIN ile) getiriyoruz
     const query = `
       SELECT u.*, h.havayolu_adi 
       FROM ucak u
@@ -20,10 +19,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. EKLE (POST) -> 🔥 havayolu_id EKLENDİ
+// 2. EKLE (POST)
 router.post('/', async (req, res) => {
   try {
-    // Frontend'den havayolu_id de gelmeli!
     const { ucak_id, model, kapasite, havayolu_id } = req.body;
     
     const yeniUcak = await pool.query(
@@ -38,7 +36,25 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 3. SİL
+// 3. 🔥 GÜNCELLE (PUT) - YENİ EKLENDİ
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params; // URL'den gelen ID (örn: TC-JHK)
+    const { model, kapasite, havayolu_id } = req.body;
+
+    const guncelUcak = await pool.query(
+      "UPDATE ucak SET model = $1, kapasite = $2, havayolu_id = $3 WHERE ucak_id = $4 RETURNING *",
+      [model, kapasite, havayolu_id, id]
+    );
+
+    res.json(guncelUcak.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Güncelleme hatası');
+  }
+});
+
+// 4. SİL (DELETE)
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;

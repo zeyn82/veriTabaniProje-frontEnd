@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. EKLE (POST) -> 🔥 Veritabanına kayıt için gerekli
+// 2. EKLE (POST)
 router.post('/', async (req, res) => {
   try {
     const { havalimani_id, havalimani_adi, sehir } = req.body;
@@ -30,7 +30,25 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 3. SİL (DELETE) -> 🔥 Veritabanından silmek için gerekli
+// 3. 🔥 GÜNCELLE (PUT) - YENİ EKLENDİ
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params; // URL'den gelen ID (örn: IST)
+    const { havalimani_adi, sehir } = req.body;
+
+    const guncelHavalimani = await pool.query(
+      "UPDATE havalimani SET havalimani_adi = $1, sehir = $2 WHERE havalimani_id = $3 RETURNING *",
+      [havalimani_adi, sehir, id]
+    );
+
+    res.json(guncelHavalimani.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Güncelleme hatası');
+  }
+});
+
+// 4. SİL (DELETE)
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;

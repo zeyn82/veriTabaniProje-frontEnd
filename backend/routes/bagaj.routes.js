@@ -5,7 +5,7 @@ const pool = require('../db');
 // 1. LİSTELE (GET)
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM bagaj');
+    const result = await pool.query('SELECT * FROM bagaj ORDER BY bagaj_no ASC');
     res.json(result.rows);
   } catch (err) {
     console.error(err.message);
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. EKLE (POST) -> 🔥 Bunu eklemezsen kayıt çalışmaz!
+// 2. EKLE (POST)
 router.post('/', async (req, res) => {
   try {
     const { bagaj_no, agirlik, yolcu_id } = req.body;
@@ -30,7 +30,25 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 3. SİL (DELETE)
+// 3. 🔥 GÜNCELLE (PUT) - YENİ EKLENDİ
+router.put('/:no', async (req, res) => {
+  try {
+    const { no } = req.params; // URL'den gelen Bagaj No
+    const { agirlik, yolcu_id } = req.body;
+
+    const guncelBagaj = await pool.query(
+      "UPDATE bagaj SET agirlik = $1, yolcu_id = $2 WHERE bagaj_no = $3 RETURNING *",
+      [agirlik, yolcu_id, no]
+    );
+
+    res.json(guncelBagaj.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Güncelleme hatası');
+  }
+});
+
+// 4. SİL (DELETE)
 router.delete('/:no', async (req, res) => {
   try {
     const { no } = req.params;
@@ -38,6 +56,7 @@ router.delete('/:no', async (req, res) => {
     res.json("Silindi");
   } catch (err) {
     console.error(err.message);
+    res.status(500).send('Silme hatası');
   }
 });
 

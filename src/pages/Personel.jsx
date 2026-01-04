@@ -6,41 +6,73 @@ function Personel({ personeller, setPersoneller }) {
   const [ad, setAd] = useState("");
   const [soyad, setSoyad] = useState("");
   const [rol, setRol] = useState(""); 
+  
+  // 🔥 Düzenleme Modu için State
+  const [duzenlenenId, setDuzenlenenId] = useState(null);
 
-  const ekle = async () => {
-    if (!id || !ad || !soyad || !rol) {
+  // 🔥 KAYDET (HEM EKLEME HEM GÜNCELLEME)
+  const kaydet = async () => {
+    if (!id || !ad || !soyad || (!duzenlenenId && !rol)) { // Düzenlerken rol zorunlu değil
       alert("Lütfen tüm alanları doldurun.");
       return;
     }
 
-    if (personeller.some(p => p.personel_id == id)) {
-      alert("Bu personel ID zaten mevcut!");
-      return;
-    }
-
     try {
-      const response = await fetch("http://localhost:3000/api/personel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          personel_id: Number(id),
-          personel_ad: ad,
-          personel_soyad: soyad,
-          rol: rol 
-        })
-      });
+      let response;
+      const veriPaketi = {
+        personel_id: Number(id),
+        personel_ad: ad,
+        personel_soyad: soyad,
+        rol: rol 
+      };
+
+      if (duzenlenenId) {
+        // 🔄 GÜNCELLEME (PUT)
+        response = await fetch(`http://localhost:3000/api/personel/${duzenlenenId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ personel_ad: ad, personel_soyad: soyad }) // Sadece isim güncellenir
+        });
+      } else {
+        // ➕ EKLEME (POST)
+        // ID Kontrolü (Sadece eklerken)
+        if (personeller.some(p => p.personel_id == id)) {
+          alert("Bu personel ID zaten mevcut!");
+          return;
+        }
+
+        response = await fetch("http://localhost:3000/api/personel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(veriPaketi)
+        });
+      }
 
       if (response.ok) {
-        const yeniVeri = await response.json();
-        setPersoneller([...personeller, yeniVeri]);
+        const sonucVerisi = await response.json();
 
+        if (duzenlenenId) {
+          // Listeyi güncelle (Rol değişmediği için eski rolü koruyoruz)
+          setPersoneller(personeller.map(p => 
+            p.personel_id === duzenlenenId 
+              ? { ...p, personel_ad: ad, personel_soyad: soyad } // Mevcut veriyi güncelle
+              : p
+          ));
+          alert("✅ Personel Bilgisi Güncellendi!");
+        } else {
+          // Listeye yeni ekle
+          setPersoneller([...personeller, sonucVerisi]);
+          alert("✅ Personel ve Rolü Başarıyla Kaydedildi!");
+        }
+
+        // Formu ve Modu Sıfırla
         setId("");
         setAd("");
         setSoyad("");
         setRol("");
-        alert("✅ Personel ve Rolü Başarıyla Kaydedildi!");
+        setDuzenlenenId(null);
       } else {
-        alert("❌ Kayıt başarısız! ID kullanılıyor olabilir.");
+        alert("❌ İşlem başarısız! ID çakışıyor olabilir.");
       }
     } catch (error) {
       console.error("Hata:", error);
@@ -48,6 +80,16 @@ function Personel({ personeller, setPersoneller }) {
     }
   };
 
+  // 🔥 DÜZENLEME MODUNU AÇAR
+  const duzenle = (p) => {
+    setDuzenlenenId(p.personel_id);
+    setId(p.personel_id);
+    setAd(p.personel_ad);
+    setSoyad(p.personel_soyad);
+    setRol(p.rol); // Rolü göster ama değiştirtme
+  };
+
+  // 🔥 SİLME İŞLEMİ
   const sil = async (id) => {
     if (!window.confirm("Personeli silmek istiyor musun?")) return;
 
@@ -77,6 +119,7 @@ function Personel({ personeller, setPersoneller }) {
             value={id} 
             onChange={e => setId(e.target.value)} 
             className="form-group-full"
+            disabled={duzenlenenId !== null} // Düzenlerken ID değiştirilemez
           />
           <input 
             placeholder="Ad" 
@@ -95,14 +138,29 @@ function Personel({ personeller, setPersoneller }) {
             value={rol} 
             onChange={e => setRol(e.target.value)}
             className="form-group-full"
+            disabled={duzenlenenId !== null} // Düzenlerken Rol değiştirilemez (Karmaşık olduğu için)
           >
             <option value="">Rol Seçiniz...</option>
             <option value="Pilot">Pilot</option>
             <option value="Kabin">Kabin Memuru</option> 
           </select>
 
-          {/* 🔥 YEŞİL BUTON */}
-          <button className="primary" onClick={ekle}>Veritabanına Kaydet</button>
+          {/* 🔥 BUTONLAR */}
+          <button className="primary" onClick={kaydet}>
+            {duzenlenenId ? "Güncelle" : "Veritabanına Kaydet"}
+          </button>
+
+          {duzenlenenId && (
+            <button onClick={() => {
+              setDuzenlenenId(null);
+              setId("");
+              setAd("");
+              setSoyad("");
+              setRol("");
+            }}>
+              İptal
+            </button>
+          )}
         </div>
       </div>
 
@@ -130,7 +188,12 @@ function Personel({ personeller, setPersoneller }) {
                   <td>{p.personel_soyad}</td>
                   <td>{p.rol || "-"}</td> 
                   <td>
-                    <button className="danger" onClick={() => sil(p.personel_id)}>
+                    <button onClick={() => duzenle(p)}>Düzenle</button>
+                    <button 
+                      className="danger" 
+                      onClick={() => sil(p.personel_id)}
+                      style={{ marginLeft: "5px" }}
+                    >
                       Sil
                     </button>
                   </td>

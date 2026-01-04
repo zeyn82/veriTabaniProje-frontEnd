@@ -5,40 +5,61 @@ function Yolcu({ yolcular, setYolcular }) {
   const [ad, setAd] = useState("");
   const [soyad, setSoyad] = useState("");
   const [telefon, setTelefon] = useState("");
+  
+  // 🔥 Düzenleme Modu için State
+  const [duzenlenenId, setDuzenlenenId] = useState(null);
 
-  // 🔥 YENİ EKLE FONKSİYONU (BACKEND İLE KONUŞUR)
-  const ekle = async () => {
+  // 🔥 KAYDET (HEM EKLEME HEM GÜNCELLEME)
+  const kaydet = async () => {
     if (!ad || !soyad || !telefon) {
       alert("Tüm alanlar zorunludur");
       return;
     }
 
     try {
-      // 1. Veriyi Backend'e Gönder (POST İsteği)
-      const response = await fetch("http://localhost:3000/api/yolcu", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          yolcu_ad: ad,      // Backend bu isimleri bekliyor
-          yolcu_soyad: soyad,
-          telefon: telefon
-        })
-      });
+      let response;
+      const veriPaketi = {
+        yolcu_ad: ad,
+        yolcu_soyad: soyad,
+        telefon: telefon
+      };
+
+      if (duzenlenenId) {
+        // 🔄 GÜNCELLEME (PUT)
+        response = await fetch(`http://localhost:3000/api/yolcu/${duzenlenenId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(veriPaketi)
+        });
+      } else {
+        // ➕ EKLEME (POST)
+        response = await fetch("http://localhost:3000/api/yolcu", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(veriPaketi)
+        });
+      }
 
       if (response.ok) {
-        // 2. Eğer kayıt başarılıysa, Backend'den gelen yeni veriyi al
-        const yeniVeri = await response.json();
+        const sonucVerisi = await response.json();
 
-        // 3. Listeyi güncelle (Sayfa yenilenmeden ekranda görünsün)
-        setYolcular([...yolcular, yeniVeri]);
+        if (duzenlenenId) {
+          // Listeyi güncelle
+          setYolcular(yolcular.map(y => y.yolcu_id === duzenlenenId ? sonucVerisi : y));
+          alert("✅ Yolcu Bilgisi Güncellendi!");
+        } else {
+          // Listeye yeni ekle
+          setYolcular([...yolcular, sonucVerisi]);
+          alert("✅ Yolcu Veritabanına Kaydedildi!");
+        }
 
-        // 4. Kutuları temizle
+        // Formu ve Modu Sıfırla
         setAd("");
         setSoyad("");
         setTelefon("");
-        alert("✅ Yolcu Veritabanına Kaydedildi!");
+        setDuzenlenenId(null);
       } else {
-        alert("❌ Kayıt başarısız oldu.");
+        alert("❌ İşlem başarısız oldu.");
       }
     } catch (error) {
       console.error("Hata:", error);
@@ -46,15 +67,20 @@ function Yolcu({ yolcular, setYolcular }) {
     }
   };
 
-  // 🔥 YENİ SİL FONKSİYONU (VERİTABANINDAN SİLER)
+  // 🔥 DÜZENLEME MODUNU AÇAR
+  const duzenle = (y) => {
+    setDuzenlenenId(y.yolcu_id);
+    setAd(y.yolcu_ad);
+    setSoyad(y.yolcu_soyad);
+    setTelefon(y.telefon);
+  };
+
+  // 🔥 SİLME İŞLEMİ
   const sil = async (id) => {
     if (!window.confirm("Yolcu silinsin mi?")) return;
 
     try {
-      // Backend'e "Sil" emri ver
       await fetch(`http://localhost:3000/api/yolcu/${id}`, { method: "DELETE" });
-      
-      // Ekrandan da sil
       setYolcular(yolcular.filter(y => y.yolcu_id !== id));
     } catch (error) {
       console.error("Silme hatası:", error);
@@ -92,8 +118,21 @@ function Yolcu({ yolcular, setYolcular }) {
             className="form-group-full"
           />
 
-          {/* 🔥 YEŞİL BUTON: className="primary" eklendi */}
-          <button className="primary" onClick={ekle}>Veritabanına Kaydet</button>
+          {/* 🔥 BUTONLAR */}
+          <button className="primary" onClick={kaydet}>
+            {duzenlenenId ? "Güncelle" : "Veritabanına Kaydet"}
+          </button>
+
+          {duzenlenenId && (
+            <button onClick={() => {
+              setDuzenlenenId(null);
+              setAd("");
+              setSoyad("");
+              setTelefon("");
+            }}>
+              İptal
+            </button>
+          )}
         </div>
       </div>
 
@@ -105,7 +144,7 @@ function Yolcu({ yolcular, setYolcular }) {
           <table>
             <thead>
               <tr>
-                <th>ID</th><th>Ad</th><th>Soyad</th><th>Telefon</th><th></th>
+                <th>ID</th><th>Ad</th><th>Soyad</th><th>Telefon</th><th>İşlem</th>
               </tr>
             </thead>
             <tbody>
@@ -116,7 +155,14 @@ function Yolcu({ yolcular, setYolcular }) {
                   <td>{y.yolcu_soyad}</td>
                   <td>{y.telefon}</td>
                   <td>
-                    <button className="danger" onClick={() => sil(y.yolcu_id)}>Sil</button>
+                    <button onClick={() => duzenle(y)}>Düzenle</button>
+                    <button 
+                      className="danger" 
+                      onClick={() => sil(y.yolcu_id)}
+                      style={{ marginLeft: "5px" }}
+                    >
+                      Sil
+                    </button>
                   </td>
                 </tr>
               ))}

@@ -2,10 +2,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// 1. LİSTELEME (GET) - Kişileri ve Rollerini Getir
+// 1. LİSTELEME (GET)
 router.get('/', async (req, res) => {
   try {
-    // JOIN işlemi ile kişinin hangi tabloda (Pilot mu Kabin mi) olduğunu buluyoruz
     const query = `
       SELECT 
         p.personel_id, 
@@ -29,30 +28,25 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. EKLEME (POST) - Hem Personel Hem Rol Tablosuna Ekle
+// 2. EKLEME (POST)
 router.post('/', async (req, res) => {
   try {
     const { personel_id, personel_ad, personel_soyad, rol } = req.body;
 
-    console.log("📥 Kayıt İsteği:", { personel_id, rol });
-
-    // ADIM A: Önce Ana Tabloya (Personel) Ekle
+    // A) Önce Ana Tabloya (Personel) Ekle
     await pool.query(
       "INSERT INTO personel (personel_id, personel_ad, personel_soyad) VALUES ($1, $2, $3)",
       [personel_id, personel_ad, personel_soyad]
     );
 
-    // ADIM B: Role Göre Alt Tabloya Ekle
+    // B) Role Göre Alt Tabloya Ekle
     if (rol === 'Pilot') {
-      // Pilot tablosuna ekle
       await pool.query("INSERT INTO pilot (personel_id) VALUES ($1)", [personel_id]);
     } 
     else if (rol === 'Kabin') {
-      // Kabin tablosuna ekle (Deneyim yılı boş olamaz hatası için varsayılan 1 veriyoruz)
       await pool.query("INSERT INTO kabin (personel_id, deneyim_yili) VALUES ($1, 1)", [personel_id]);
     }
 
-    // Başarılı cevabı döndür
     res.json({ personel_id, personel_ad, personel_soyad, rol });
 
   } catch (err) {
@@ -61,18 +55,35 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 3. SİLME (DELETE) - Her İki Yerden Sil
+// 3. 🔥 GÜNCELLEME (PUT) - YENİ EKLENDİ
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { personel_ad, personel_soyad } = req.body;
+
+    // Sadece Personel tablosundaki isimleri güncelliyoruz
+    // (Rol değiştirmek karmaşık olduğu için şimdilik sadece isim)
+    const guncelPersonel = await pool.query(
+      "UPDATE personel SET personel_ad = $1, personel_soyad = $2 WHERE personel_id = $3 RETURNING *",
+      [personel_ad, personel_soyad, id]
+    );
+
+    // Rol bilgisini tekrar çekip dönmek gerekebilir ama şimdilik frontend hallediyor
+    res.json(guncelPersonel.rows[0]);
+
+  } catch (err) {
+    console.error("❌ Güncelleme Hatası:", err.message);
+    res.status(500).send('Güncelleme hatası');
+  }
+});
+
+// 4. SİLME (DELETE)
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
-    // PostgreSQL'de "Cascade Delete" ayarı yoksa hata almamak için 
-    // önce alt tablolardan (Pilot/Kabin), sonra ana tablodan (Personel) siliyoruz.
     
     await pool.query("DELETE FROM pilot WHERE personel_id = $1", [id]);
     await pool.query("DELETE FROM kabin WHERE personel_id = $1", [id]);
-    
-    // Altlar temizlendikten sonra ana kaydı sil
     await pool.query("DELETE FROM personel WHERE personel_id = $1", [id]);
 
     res.json("Başarıyla silindi");

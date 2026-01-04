@@ -6,39 +6,67 @@ function Ucak({ ucaklar = [], setUcaklar, havayollari = [] }) {
   const [model, setModel] = useState("");
   const [kapasite, setKapasite] = useState("");
   const [secilenHavayoluId, setSecilenHavayoluId] = useState("");
+  
+  // 🔥 Düzenleme Modu için State
+  const [duzenlenenId, setDuzenlenenId] = useState(null);
 
-  const ekle = async () => {
+  // 🔥 KAYDET (HEM EKLEME HEM GÜNCELLEME)
+  const kaydet = async () => {
     if (!id || !model || !kapasite || !secilenHavayoluId) {
       alert("Lütfen tüm alanları (Havayolu dahil) doldurun.");
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/ucak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ucak_id: id,            
-          model: model,
-          kapasite: Number(kapasite),
-          havayolu_id: secilenHavayoluId 
-        })
-      });
+      let response;
+      const veriPaketi = {
+        ucak_id: id,
+        model: model,
+        kapasite: Number(kapasite),
+        havayolu_id: secilenHavayoluId
+      };
+
+      if (duzenlenenId) {
+        // 🔄 GÜNCELLEME (PUT)
+        response = await fetch(`http://localhost:3000/api/ucak/${duzenlenenId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(veriPaketi)
+        });
+      } else {
+        // ➕ EKLEME (POST)
+        response = await fetch("http://localhost:3000/api/ucak", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(veriPaketi)
+        });
+      }
 
       if (response.ok) {
-        const yeniVeri = await response.json();
+        const veri = await response.json();
+        
+        // Havayolu adını frontend'de güncellemek için eşleştirme yapıyoruz
         const havayoluAdi = havayollari.find(h => h.havayolu_id === secilenHavayoluId)?.havayolu_adi;
-        const ekrandakiVeri = { ...yeniVeri, havayolu_adi: havayoluAdi };
+        const ekrandakiVeri = { ...veri, havayolu_adi: havayoluAdi };
 
-        setUcaklar([...ucaklar, ekrandakiVeri]);
+        if (duzenlenenId) {
+          // Listeyi güncelle
+          setUcaklar(ucaklar.map(u => u.ucak_id === duzenlenenId ? ekrandakiVeri : u));
+          alert("✅ Uçak Güncellendi!");
+        } else {
+          // Listeye yeni ekle
+          setUcaklar([...ucaklar, ekrandakiVeri]);
+          alert("✅ Uçak Kaydedildi!");
+        }
 
+        // Formu ve Modu Sıfırla
         setId("");
         setModel("");
         setKapasite("");
         setSecilenHavayoluId("");
-        alert("✅ Uçak Veritabanına Kaydedildi!");
+        setDuzenlenenId(null);
       } else {
-        alert("❌ Kayıt başarısız! ID çakışıyor olabilir.");
+        alert("❌ İşlem başarısız! ID çakışıyor olabilir.");
       }
     } catch (error) {
       console.error("Hata:", error);
@@ -46,6 +74,16 @@ function Ucak({ ucaklar = [], setUcaklar, havayollari = [] }) {
     }
   };
 
+  // 🔥 DÜZENLEME MODUNU AÇAR
+  const duzenle = (u) => {
+    setDuzenlenenId(u.ucak_id);
+    setId(u.ucak_id);
+    setModel(u.model);
+    setKapasite(u.kapasite);
+    setSecilenHavayoluId(u.havayolu_id);
+  };
+
+  // 🔥 SİLME İŞLEMİ
   const sil = async (id) => {
     if (!window.confirm("Uçağı silmek istiyor musun?")) return;
     try {
@@ -74,6 +112,7 @@ function Ucak({ ucaklar = [], setUcaklar, havayollari = [] }) {
             value={id} 
             onChange={e => setId(e.target.value)} 
             className="form-group-full"
+            disabled={duzenlenenId !== null} // Düzenlerken ID kilitli
           />
           
           <input 
@@ -104,8 +143,22 @@ function Ucak({ ucaklar = [], setUcaklar, havayollari = [] }) {
             ))}
           </select>
 
-          {/* 🔥 YEŞİL BUTON */}
-          <button className="primary" onClick={ekle}>Veritabanına Kaydet</button>
+          {/* 🔥 BUTONLAR */}
+          <button className="primary" onClick={kaydet}>
+            {duzenlenenId ? "Güncelle" : "Veritabanına Kaydet"}
+          </button>
+
+          {duzenlenenId && (
+            <button onClick={() => {
+              setDuzenlenenId(null);
+              setId("");
+              setModel("");
+              setKapasite("");
+              setSecilenHavayoluId("");
+            }}>
+              İptal
+            </button>
+          )}
         </div>
       </div>
 
@@ -136,7 +189,12 @@ function Ucak({ ucaklar = [], setUcaklar, havayollari = [] }) {
                       u.havayolu_id}
                   </td>
                   <td>
-                    <button className="danger" onClick={() => sil(u.ucak_id)}>
+                    <button onClick={() => duzenle(u)}>Düzenle</button>
+                    <button 
+                      className="danger" 
+                      onClick={() => sil(u.ucak_id)}
+                      style={{ marginLeft: "5px" }}
+                    >
                       Sil
                     </button>
                   </td>

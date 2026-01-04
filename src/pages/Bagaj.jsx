@@ -5,38 +5,61 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
   const [bagajNo, setBagajNo] = useState("");
   const [agirlik, setAgirlik] = useState("");
   const [yolcuId, setYolcuId] = useState("");
+  
+  // 🔥 Düzenleme Modu için State
+  const [duzenlenenId, setDuzenlenenId] = useState(null);
 
-  // 🔥 YENİ EKLE FONKSİYONU (VERİTABANI KAYITLI)
-  const ekle = async () => {
+  // 🔥 KAYDET (HEM EKLEME HEM GÜNCELLEME)
+  const kaydet = async () => {
     if (!bagajNo || !agirlik || !yolcuId) {
       alert("Lütfen tüm alanları doldurun.");
       return;
     }
 
     try {
-      // 1. Backend'e Veriyi Gönder
-      const response = await fetch("http://localhost:3000/api/bagaj", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bagaj_no: bagajNo,
-          agirlik: agirlik,
-          yolcu_id: yolcuId,
-        })
-      });
+      let response;
+      const veriPaketi = {
+        bagaj_no: bagajNo,
+        agirlik: agirlik,
+        yolcu_id: yolcuId,
+      };
+
+      if (duzenlenenId) {
+        // 🔄 GÜNCELLEME (PUT)
+        response = await fetch(`http://localhost:3000/api/bagaj/${duzenlenenId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(veriPaketi)
+        });
+      } else {
+        // ➕ EKLEME (POST)
+        response = await fetch("http://localhost:3000/api/bagaj", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(veriPaketi)
+        });
+      }
 
       if (response.ok) {
-        // 2. Başarılıysa Listeyi Güncelle
-        const yeniVeri = await response.json();
-        setBagajlar([...bagajlar, yeniVeri]);
+        const sonucVerisi = await response.json();
 
-        // 3. Formu Temizle
+        if (duzenlenenId) {
+          // Listeyi güncelle
+          setBagajlar(bagajlar.map(b => b.bagaj_no === duzenlenenId ? sonucVerisi : b));
+          alert("✅ Bagaj Bilgisi Güncellendi!");
+        } else {
+          // Listeye yeni ekle
+          setBagajlar([...bagajlar, sonucVerisi]);
+          alert("✅ Bagaj Veritabanına Kaydedildi!");
+        }
+
+        // Formu ve Modu Sıfırla
         setBagajNo("");
         setAgirlik("");
         setYolcuId("");
-        alert("✅ Bagaj Veritabanına Kaydedildi!");
+        setDuzenlenenId(null);
       } else {
-        alert("❌ Kayıt başarısız! Bagaj No çakışıyor olabilir.");
+        alert("❌ İşlem başarısız! Bagaj No çakışıyor olabilir.");
       }
     } catch (error) {
       console.error("Hata:", error);
@@ -44,7 +67,15 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
     }
   };
 
-  // 🔥 YENİ SİL FONKSİYONU (VERİTABANINDAN SİLER)
+  // 🔥 DÜZENLEME MODUNU AÇAR
+  const duzenle = (b) => {
+    setDuzenlenenId(b.bagaj_no);
+    setBagajNo(b.bagaj_no);
+    setAgirlik(b.agirlik);
+    setYolcuId(b.yolcu_id);
+  };
+
+  // 🔥 SİLME İŞLEMİ
   const sil = async (no) => {
     if (!window.confirm("Silmek istiyor musun?")) return;
 
@@ -59,7 +90,6 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
   return (
     <motion.div 
       className="page"
-      /* ✨ ANİMASYON AYARLARI ✨ */
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -74,6 +104,7 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
             value={bagajNo}
             onChange={(e) => setBagajNo(e.target.value)}
             className="form-group-full"
+            disabled={duzenlenenId !== null} // Düzenlerken ID değiştirilemez
           />
 
           <input
@@ -97,8 +128,21 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
             ))}
           </select>
 
-          {/* 🔥 YEŞİL BUTON: className="primary" eklendi */}
-          <button className="primary" onClick={ekle}>Veritabanına Kaydet</button>
+          {/* 🔥 BUTONLAR */}
+          <button className="primary" onClick={kaydet}>
+            {duzenlenenId ? "Güncelle" : "Veritabanına Kaydet"}
+          </button>
+
+          {duzenlenenId && (
+            <button onClick={() => {
+              setDuzenlenenId(null);
+              setBagajNo("");
+              setAgirlik("");
+              setYolcuId("");
+            }}>
+              İptal
+            </button>
+          )}
         </div>
       </div>
 
@@ -130,7 +174,12 @@ function Bagaj({ yolcular, bagajlar, setBagajlar }) {
                          {y ? `${y.yolcu_ad} ${y.yolcu_soyad}` : `ID: ${b.yolcu_id}`}
                     </td>
                     <td>
-                      <button className="danger" onClick={() => sil(b.bagaj_no)}>
+                      <button onClick={() => duzenle(b)}>Düzenle</button>
+                      <button 
+                        className="danger" 
+                        onClick={() => sil(b.bagaj_no)}
+                        style={{ marginLeft: "5px" }}
+                      >
                         Sil
                       </button>
                     </td>

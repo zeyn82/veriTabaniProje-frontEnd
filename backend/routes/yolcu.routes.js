@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// 1. TÜM YOLCULARI GETİR (GET)
+// 1. LİSTELE (GET)
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM yolcu ORDER BY yolcu_id ASC');
@@ -13,38 +13,50 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. YENİ YOLCU EKLE (POST) -> 🔥 YENİ KISIM BURASI
+// 2. EKLE (POST)
 router.post('/', async (req, res) => {
   try {
-    // Frontend'den gelen verileri alıyoruz
     const { yolcu_ad, yolcu_soyad, telefon } = req.body;
-
-    // ID'yi otomatik oluşturuyoruz (Rastgele bir sayı)
-    // Not: Normalde veritabanı bunu kendi yapar (SERIAL) ama şimdilik böyle çözelim.
-    const yolcu_id = Math.floor(Math.random() * 100000); 
-
+    
     const yeniYolcu = await pool.query(
-      "INSERT INTO yolcu (yolcu_id, yolcu_ad, yolcu_soyad, telefon) VALUES ($1, $2, $3, $4) RETURNING *",
-      [yolcu_id, yolcu_ad, yolcu_soyad, telefon]
+      "INSERT INTO yolcu (yolcu_ad, yolcu_soyad, telefon) VALUES ($1, $2, $3) RETURNING *",
+      [yolcu_ad, yolcu_soyad, telefon]
     );
 
-    // Kaydedilen veriyi Frontend'e geri dönüyoruz
     res.json(yeniYolcu.rows[0]);
-    
   } catch (err) {
-    console.error("Yolcu eklenemedi:", err.message);
-    res.status(500).send('Yolcu eklenirken hata oluştu');
+    console.error(err.message);
+    res.status(500).send('Hata: ' + err.message);
   }
 });
 
-// 3. YOLCU SİL (DELETE) -> 🔥 BUNU DA EKLEYELİM
+// 3. 🔥 GÜNCELLE (PUT) - YENİ EKLENDİ
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { yolcu_ad, yolcu_soyad, telefon } = req.body;
+
+    const guncelYolcu = await pool.query(
+      "UPDATE yolcu SET yolcu_ad = $1, yolcu_soyad = $2, telefon = $3 WHERE yolcu_id = $4 RETURNING *",
+      [yolcu_ad, yolcu_soyad, telefon, id]
+    );
+
+    res.json(guncelYolcu.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Güncelleme hatası');
+  }
+});
+
+// 4. SİL (DELETE)
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query("DELETE FROM yolcu WHERE yolcu_id = $1", [id]);
-    res.json("Yolcu silindi!");
+    res.json("Silindi");
   } catch (err) {
     console.error(err.message);
+    res.status(500).send('Silme hatası');
   }
 });
 
