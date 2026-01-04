@@ -7,7 +7,10 @@ function AnaSayfa({ girisYapildi, setGirisYapildi }) {
   const [sifre, setSifre] = useState("");
   const [hata, setHata] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = (e) => {
+    // 🔥 ÖNEMLİ: Formun sayfayı yenilemesini (varsayılan davranışı) engelliyoruz
+    e.preventDefault();
+
     // Basit doğrulama (Backend olmadan)
     if (kullaniciAdi === "admin" && sifre === "1234") {
       setGirisYapildi(true); // App.jsx'teki durumu günceller
@@ -36,9 +39,13 @@ function AnaSayfa({ girisYapildi, setGirisYapildi }) {
             Lütfen sisteme giriş yapınız.
           </p>
 
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          {/* 🔥 DÜZELTME: div yerine FORM etiketi kullanıldı ve onSubmit eklendi */}
+          <form 
+            className="form-group" 
+            onSubmit={handleLogin}
+            style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}
+          >
             
-            {/* 🔽 DÜZELTİLEN KISIM: İpuçları kaldırıldı */}
             <input 
               type="text" 
               placeholder="Kullanıcı Adı" 
@@ -59,11 +66,11 @@ function AnaSayfa({ girisYapildi, setGirisYapildi }) {
               </p>
             )}
 
-            {/* Yeşil Buton */}
-            <button className="primary" onClick={handleLogin}>
+            {/* Form içindeki button type="submit" olunca Enter tuşu tetikler */}
+            <button className="primary" type="submit">
               Giriş Yap
             </button>
-          </div>
+          </form>
         </div>
       ) : (
         /* 🔥 EĞER GİRİŞ YAPILDIYSA: ANA SAYFA İÇERİĞİNİ GÖSTER 🔥 */
